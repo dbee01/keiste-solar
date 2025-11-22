@@ -24,7 +24,7 @@ if (!defined('WPINC')) {
 
 // Define plugin constants (only once) with ksrad_ namespace
 if (!defined('KSRAD_VERSION')) {
-    define('KSRAD_VERSION', '1.0.0');
+    define('KSRAD_VERSION', '1.0.3');
 }
 if (!defined('KSRAD_PLUGIN_DIR')) {
     define('KSRAD_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -1865,30 +1865,26 @@ ob_start();
                                     </div>
                                 </div>
 
-
-                                <button id="roiBtn" type="button" class="btn btn-primary" style="display: none;">DOWNLOAD<br>REPORT</button>
-
+                                <!-- Hidden download button (triggered via JS after calculation) -->            
+                                <div style="display: none;" >
+                                    <button id="roiBtn" type="button" class="btn btn-primary" style="display: none;">DOWNLOAD<br>REPORT</button>
+                                </div>
 
                             </div>
-                        </div>
-
+                        </div>  
 
                         <!-- Combined Chart Page: Break Even & Energy Production -->
                         <div class="pdf-page mt-5">
                             <h4 class="text-center mb-4">Financial Analysis Charts</h4>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="chart-container">
-                                        <div style="overflow-x:auto; width:100%;">
-                                            <canvas id="breakEvenChart"
-                                                style="margin: auto; min-width:350px; max-width:800px; width:100%; height:260px;"></canvas>
-                                        </div>
+                                    <div class="chart-container" style="position: relative; height: 300px; background: transparent;">
+                                        <canvas id="breakEvenChart" style="background: transparent;"></canvas>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="chart-container">
-                                        <canvas id="energyChart"
-                                            style="margin: auto; min-width:350px; max-width:800px; width:100%; height:260px;"></canvas>
+                                    <div class="chart-container" style="position: relative; height: 300px; background: transparent;">
+                                        <canvas id="energyChart" style="background: transparent;"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -2241,13 +2237,17 @@ ob_start();
                                             try {
                                                 const cfg = { panelsCount: panelCount, yearlyEnergyDcKwh: yearlyEnergy };
                                                 const be = calculateBreakEvenDataSimple(cfg);
-                                                if (be && be.savings && window.breakEvenChart.data && window.breakEvenChart.data.datasets && window.breakEvenChart.data.datasets[0]) {
-                                                    window.breakEvenChart.data.datasets[0].data = be.savings;
+                                                if (be && be.savings && window.breakEvenChart && window.breakEvenChart.data && window.breakEvenChart.data.datasets && window.breakEvenChart.data.datasets[0]) {
+                                                    // Create a new array reference to ensure Chart.js detects the change
+                                                    window.breakEvenChart.data.datasets[0].data = [...be.savings];
                                                     window.breakEvenChart.data.datasets[0].label = `${panelCount} Panels`;
-                                                    window.breakEvenChart.update();
+                                                    // Force chart to recalculate scales and redraw
+                                                    window.breakEvenChart.options.scales.y.min = undefined;
+                                                    window.breakEvenChart.options.scales.y.max = undefined;
+                                                    window.breakEvenChart.update('active');
                                                 }
                                             } catch (e) {
-                                                // ignore chart update errors
+                                                console.error('Chart update error:', e);
                                             }
                                         }
                                     } catch (err) {
@@ -2514,25 +2514,41 @@ ob_start();
             (function() {
                 if (window.ksradChartsInitialized) return; // Prevent duplicate initialization
                 
+                console.log('Starting chart initialization check, Chart available:', typeof Chart);
+                
                 function initializeChartsWhenReady() {
                     if (typeof Chart === 'undefined') {
+                        console.log('Chart.js not yet loaded, waiting...');
                         setTimeout(initializeChartsWhenReady, 50);
                         return;
                     }
+                    console.log('Chart.js loaded! Version:', Chart.version);
                     initializeCharts();
                 }
                 
                 function initializeCharts() {
-                    if (window.ksradChartsInitialized) return; // Double-check
+                    console.log('initializeCharts called', {
+                        alreadyInit: window.ksradChartsInitialized,
+                        hasBreakEvenChart: !!window.breakEvenChart,
+                        hasEnergyChart: !!window.energyChart
+                    });
+                    
+                    if (window.ksradChartsInitialized) {
+                        console.log('Charts already initialized, skipping');
+                        return;
+                    }
                     window.ksradChartsInitialized = true;
                     
                     // Check if charts already exist (from external js files)
                     if (window.breakEvenChart || window.energyChart) {
+                        console.log('Charts already exist externally, skipping');
                         return;
                     }
                     
+            console.log('Starting chart creation...');
             // --- Break Even Chart ---
-            function calculateBreakEvenDataSimple(config) {
+            // Make this function globally accessible so updateBreakEvenChart can use it
+            window.calculateBreakEvenDataSimple = function calculateBreakEvenDataSimple(config) {
                 const yearlyEnergy = config.yearlyEnergyDcKwh;
                 const panelCount = config.panelsCount;
                 const electricityRate = parseFloat(document.getElementById('electricityRate')?.value) || 0.45;
@@ -2580,13 +2596,22 @@ ob_start();
                     return totalSaving - totalCost;
                 });
                 return { cost: totalCost, savings: savings, breakEvenYear: savings.findIndex(saving => saving >= 0) };
+            };
+            try {
+            const breakEvenCanvas = document.getElementById('breakEvenChart');
+            if (!breakEvenCanvas) {
+                console.error('Break Even Chart canvas not found');
+                return;
             }
-            const breakEvenCtx = document.getElementById('breakEvenChart').getContext('2d');
+            console.log('Initializing Break Even Chart...', breakEvenCanvas);
+            const breakEvenCtx = breakEvenCanvas.getContext('2d');
             // Create global chart instance so it can be updated later
             const configurations = <?php echo wp_json_encode($ksrad_solarData['solarPotential']['solarPanelConfigs']); ?>;
+            console.log('Solar configurations:', configurations);
             const config = configurations[0]; // initial config for first chart render
             // Initialize with zero data - actual data will populate on user interaction
             const data = { cost: 0, savings: Array(25).fill(0), breakEvenYear: -1 };
+            console.log('Creating Chart.js instance with data:', data);
             window.breakEvenChart = new Chart(breakEvenCtx, {
                 type: 'line',
                 data: {
@@ -2651,7 +2676,13 @@ ob_start();
                     }
                 }
             });
+            console.log('Break Even Chart created successfully!', window.breakEvenChart);
+            } catch (error) {
+                console.error('Error creating Break Even Chart:', error);
+            }
+            
             // --- Energy Production Chart ---
+            try {
             const ctx = document.getElementById('energyChart').getContext('2d');
             // Energy production over time for the currently selected panel count
             window.energyChart = new Chart(ctx, {
@@ -2688,6 +2719,10 @@ ob_start();
                     }
                 }
             });
+            console.log('Energy Chart created successfully!', window.energyChart);
+            } catch (error) {
+                console.error('Error creating Energy Chart:', error);
+            }
 
             // updater: recompute the energyChart dataset using the current slider value
             window.updateEnergyChart = function () {
@@ -2707,10 +2742,20 @@ ob_start();
                     console.error('updateEnergyChart error', e);
                 }
             };
+            
+            // After charts are initialized, trigger calculateROI to populate them with initial data
+            console.log('Charts initialized, triggering initial calculateROI');
+            if (typeof window.calculateROI === 'function') {
+                setTimeout(() => window.calculateROI(), 100);
+            }
             } // end initializeCharts
             
-            // Start checking for Chart.js availability
-            initializeChartsWhenReady();
+            // Start checking for Chart.js availability after DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initializeChartsWhenReady);
+            } else {
+                initializeChartsWhenReady();
+            }
             })(); // end IIFE to prevent duplicate initialization
         </script>
     <?php endif; ?>
@@ -3105,20 +3150,57 @@ ob_start();
 
             // Minimal canvas updates so the IDs react without external libs
             function updateBreakEvenChart(state, figs) {
+                console.log('updateBreakEvenChart called', { 
+                    hasChart: !!window.breakEvenChart,
+                    hasChartData: !!(window.breakEvenChart && window.breakEvenChart.data),
+                    hasFunc: typeof window.calculateBreakEvenDataSimple === 'function',
+                    billMonthly: state.billMonthly,
+                    panels: state.panels 
+                });
+                
                 // Prefer updating Chart.js instance when available (keeps rendering consistent)
-                if (window.breakEvenChart && typeof calculateBreakEvenDataSimple === 'function') {
+                if (window.breakEvenChart && window.breakEvenChart.data && typeof window.calculateBreakEvenDataSimple === 'function') {
                     try {
-                        const cfg = { panelsCount: state.panels, yearlyEnergyDcKwh: figs.yearlyEnergyKWh || (state.panels * DAY_POWER_AVG * DAYS_IN_YR) };
-                        const be = calculateBreakEvenDataSimple(cfg);
-                        if (be && be.savings && window.breakEvenChart.data && window.breakEvenChart.data.datasets && window.breakEvenChart.data.datasets[0]) {
-                            window.breakEvenChart.data.datasets[0].data = be.savings;
-                            window.breakEvenChart.data.datasets[0].label = `${state.panels} Panels`;
-                            window.breakEvenChart.update();
+                        // On page load with no bill, show zero baseline
+                        if (!state.billMonthly || state.billMonthly === 0) {
+                            console.log('Setting chart to zero baseline');
+                            window.breakEvenChart.data.datasets[0].data = Array(25).fill(0);
+                            window.breakEvenChart.data.datasets[0].label = '0 Panels';
+                            window.breakEvenChart.update('none');
                             return;
                         }
+                        
+                        const cfg = { panelsCount: state.panels, yearlyEnergyDcKwh: figs.yearlyEnergyKWh || (state.panels * DAY_POWER_AVG * DAYS_IN_YR) };
+                        console.log('Calling calculateBreakEvenDataSimple with:', cfg);
+                        const be = window.calculateBreakEvenDataSimple(cfg);
+                        console.log('Break even data:', be);
+                        
+                        if (be && be.savings && window.breakEvenChart.data && window.breakEvenChart.data.datasets && window.breakEvenChart.data.datasets[0]) {
+                            console.log('Updating chart with', be.savings.length, 'data points');
+                            window.breakEvenChart.data.datasets[0].data = [...be.savings];
+                            window.breakEvenChart.data.datasets[0].label = `${state.panels} Panels`;
+                            // Force chart to recalculate scales and redraw
+                            window.breakEvenChart.options.scales.y.min = undefined;
+                            window.breakEvenChart.options.scales.y.max = undefined;
+                            window.breakEvenChart.update('active');
+                            console.log('Chart updated successfully');
+                            return;
+                        } else {
+                            console.warn('Missing chart data structure:', { 
+                                hasBe: !!be, 
+                                hasSavings: be?.savings, 
+                                hasChartData: !!window.breakEvenChart.data 
+                            });
+                        }
                     } catch (e) {
+                        console.error('Chart update error:', e);
                         // fall back to canvas drawing below
                     }
+                } else {
+                    console.warn('Chart not available:', {
+                        hasChart: !!window.breakEvenChart,
+                        hasFunc: typeof window.calculateBreakEvenDataSimple
+                    });
                 }
 
                 const c = byId('breakEvenChart');
@@ -3194,16 +3276,18 @@ ob_start();
                     const zeroFigs = keyFigures({ ...state, billMonthly: 0 });
                     updateResults(state, zeroFigs);
                     updateInstallationDetails(state, zeroFigs);
-                    updateBreakEvenChart(state, zeroFigs);
-                    updateEnergyChart(state, zeroFigs);
+                    // Only update charts if they exist
+                    if (window.breakEvenChart) updateBreakEvenChart(state, zeroFigs);
+                    if (window.energyChart) updateEnergyChart(state, zeroFigs);
                     updateSolarInvestmentAnalysis(state, zeroFigs);
                     return;
                 }
                 const figs = keyFigures(state);
                 updateResults(state, figs);
                 updateInstallationDetails(state, figs);
-                updateBreakEvenChart(state, figs);
-                updateEnergyChart(state, figs);
+                // Only update charts if they exist
+                if (window.breakEvenChart) updateBreakEvenChart(state, figs);
+                if (window.energyChart) updateEnergyChart(state, figs);
                 updateSolarInvestmentAnalysis(state, figs);
             }
 
@@ -3246,6 +3330,13 @@ ob_start();
                 setZero('totalSavings', '€0');
                 setZero('roi', '0%');
                 setZero('co2Reduction', '0');
+                
+                // Initialize charts with zero data if they exist and are fully initialized
+                if (window.breakEvenChart && window.breakEvenChart.data && window.breakEvenChart.data.datasets && window.breakEvenChart.data.datasets[0]) {
+                    window.breakEvenChart.data.datasets[0].data = Array(25).fill(0);
+                    window.breakEvenChart.data.datasets[0].label = '0 Panels';
+                    window.breakEvenChart.update('none');
+                }
             }
 
             document.addEventListener('DOMContentLoaded', () => {
@@ -3253,6 +3344,7 @@ ob_start();
                 initialPopulate();
                 
                 // Ensure values stay at zero after a short delay (to override any other initialization)
+                // Also check if charts are ready
                 setTimeout(() => {
                     initialPopulate();
                 }, 200);

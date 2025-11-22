@@ -88,19 +88,20 @@
         if (!canvas || !window.Chart) return null;
 
         const ctx = canvas.getContext('2d');
-        const configurations = window.solarConfigs || [];
-        const config = configurations[0];
         
-        if (!config) return null;
-
-        const data = calculateBreakEvenDataSimple(config);
+        // Initialize with zero data - will be populated when user enters bill
+        const data = {
+            cost: 0,
+            savings: Array(25).fill(0),
+            breakEvenYear: -1
+        };
 
         return new Chart(ctx, {
             type: 'line',
             data: {
                 labels: Array.from({ length: 25 }, (_, i) => `Year ${i}`),
                 datasets: [{
-                    label: `${config.panelsCount} Panels`,
+                    label: '0 Panels',
                     data: data.savings,
                     borderColor: 'rgba(42, 157, 143, 1)',
                     backgroundColor: 'rgba(42, 157, 143, 0.08)',
@@ -249,9 +250,28 @@
 
     // ===== UPDATE BREAK-EVEN CHART =====
     window.updateBreakEvenChart = function (state, figs) {
-        if (!window.breakEvenChart || typeof calculateBreakEvenDataSimple !== 'function') return;
+        console.log('updateBreakEvenChart in charts.js called', { state, figs, hasChart: !!window.breakEvenChart });
+        
+        if (!window.breakEvenChart) {
+            console.warn('No breakEvenChart available');
+            return;
+        }
 
         try {
+            // On page load with no bill, show zero baseline
+            if (!state.billMonthly || state.billMonthly === 0) {
+                console.log('Setting chart to zero (no bill)');
+
+                if (window.breakEvenChart.data && window.breakEvenChart.data.datasets && window.breakEvenChart.data.datasets[0]) {
+                    window.breakEvenChart.data.datasets[0].data = Array(25).fill(0);
+                    window.breakEvenChart.data.datasets[0].label = '0 Panels';
+                    window.breakEvenChart.update('none');
+                }
+                return;
+            }
+
+            if (typeof calculateBreakEvenDataSimple !== 'function') return;
+            
             const cfg = {
                 panelsCount: state.panels,
                 yearlyEnergyDcKwh: figs.yearlyEnergyKWh || (state.panels * DAY_POWER_AVG * DAYS_IN_YR)
@@ -263,9 +283,9 @@
                 window.breakEvenChart.data.datasets &&
                 window.breakEvenChart.data.datasets[0]) {
                 
-                window.breakEvenChart.data.datasets[0].data = be.savings;
+                window.breakEvenChart.data.datasets[0].data = [...be.savings];
                 window.breakEvenChart.data.datasets[0].label = `${state.panels} Panels`;
-                window.breakEvenChart.update();
+                window.breakEvenChart.update('active');
             }
         } catch (e) {
             console.error('updateBreakEvenChart error', e);
