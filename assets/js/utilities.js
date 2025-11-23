@@ -94,13 +94,13 @@
     // ===== PANEL COUNT GETTER =====
     function getPanelCount() {
         const range = document.querySelector('input[type="range"]#panelCount');
-        if (range) return parseInt(range.value, 10) || 4;
+        if (range) return parseInt(range.value, 10) || 0;
         
         const disp = document.getElementById('panelCountValue') || 
                      document.getElementById('panelCountDisplay');
-        if (disp) return parseInt(disp.textContent.trim(), 10) || 4;
+        if (disp) return parseInt(disp.textContent.trim(), 10) || 0;
         
-        return 4;
+        return 0;
     }
 
     // ===== COST UPDATE HANDLER =====

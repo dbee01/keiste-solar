@@ -24,7 +24,7 @@ if (!defined('WPINC')) {
 
 // Define plugin constants (only once) with ksrad_ namespace
 if (!defined('KSRAD_VERSION')) {
-    define('KSRAD_VERSION', '1.0.5');
+    define('KSRAD_VERSION', '1.0.6');
 }
 if (!defined('KSRAD_PLUGIN_DIR')) {
     define('KSRAD_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -1040,7 +1040,7 @@ ob_start();
                                             $ksrad_header_four_panel_yearly = null;
                                             if (isset($ksrad_solarData['solarPotential']['solarPanelConfigs'])) {
                                                 foreach ($ksrad_solarData['solarPotential']['solarPanelConfigs'] as $ksrad_c) {
-                                                    if (!empty($ksrad_c['panelsCount']) && $ksrad_c['panelsCount'] == 4) {
+                                                    if (!empty($ksrad_c['panelsCount']) && $ksrad_c['panelsCount'] == 0) {
                                                         $ksrad_header_four_panel_yearly = $ksrad_c['yearlyEnergyDcKwh'];
                                                         break;
                                                     }
@@ -1255,30 +1255,8 @@ ob_start();
                                         <label for="installationCost" class="form-label-left">Upfront Installation Cost
                                             (<?php echo esc_html(ksrad_get_option('currency', '€')); ?>)</label>
                                         <?php
-                                        // Compute a sensible default installation cost based on a 4-panel baseline (400W panels)
-                                        $ksrad_four_panel_yearly = null;
-                                        if (isset($ksrad_solarData['solarPotential']['solarPanelConfigs'])) {
-                                            foreach ($ksrad_solarData['solarPotential']['solarPanelConfigs'] as $ksrad_c) {
-                                                if (!empty($ksrad_c['panelsCount']) && $ksrad_c['panelsCount'] == 4) {
-                                                    $ksrad_four_panel_yearly = $ksrad_c['yearlyEnergyDcKwh'];
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        if ($ksrad_four_panel_yearly) {
-                                            $ksrad_installed_kwp = floatval($ksrad_four_panel_yearly) / 1000.0;
-                                        } else {
-                                            // Fallback: 4 panels * 400W = 1600W -> 1.6 kWp -> ~1600 kWh/year
-                                            $ksrad_installed_kwp = (4 * 400) / 1000.0;
-                                        }
-                                        // sliding-scale pricing
-                                        if ($ksrad_installed_kwp <= 100) {
-                                            $ksrad_default_install_cost = $ksrad_installed_kwp * 1500;
-                                        } elseif ($ksrad_installed_kwp <= 250) {
-                                            $ksrad_default_install_cost = (100 * 1500) + (($ksrad_installed_kwp - 100) * 1300);
-                                        } else {
-                                            $ksrad_default_install_cost = (100 * 1500) + (150 * 1300) + (($ksrad_installed_kwp - 250) * 1100);
-                                        }
+                                        // Default to 0 panels - user will adjust slider to calculate cost
+                                        $ksrad_default_install_cost = 0;
                                         ?>
                                         <div class="energy-display-left"><span id="installationCost"
                                                 class="highlighted-value"><?php echo number_format(round($ksrad_default_install_cost), 0); ?></span>
@@ -1288,7 +1266,7 @@ ob_start();
                                     <div class="install-details-cell install-details-border">
                                         <label for="grant" class="form-label-right">Available Grant (<?php echo esc_html(ksrad_get_option('currency', '€')); ?>)</label>
                                         <div class="energy-display-right"><span id="grant"
-                                                class="highlighted-value">715.80</span></div>
+                                                class="highlighted-value">0</span></div>
                                         <div class="input-help-right">30% of installation cost (max €162,000)</div>
                                     </div>
                                 </div>
@@ -1310,28 +1288,9 @@ ob_start();
                                     <div class="install-details-cell">
                                         <label for="yearlyEnergy" class="form-label-left">Annual Energy Production (KWh)</label>
                                         <div class="energy-display-left">
-                                            <span id="yearlyEnergyValue" class="highlighted-value">
-                                                <?php
-                                                $ksrad_fourPanelConfig = null;
-                                                if (isset($ksrad_solarData['solarPotential']['solarPanelConfigs'])) {
-                                                    foreach ($ksrad_solarData['solarPotential']['solarPanelConfigs'] as $ksrad_c) {
-                                                        if ($ksrad_c['panelsCount'] == 4) {
-                                                            $ksrad_fourPanelConfig = $ksrad_c;
-                                                            break;
-                                                        }
-                                                    }
-                                                }
-                                                if ($ksrad_fourPanelConfig) {
-                                                    echo esc_html(ksrad_format_kwh($ksrad_fourPanelConfig['yearlyEnergyDcKwh']));
-                                                } else {
-                                                    echo isset($ksrad_solarData['solarPotential']['solarPanelConfigs'][0]['yearlyEnergyDcKwh']) ? esc_html(ksrad_format_kwh($ksrad_solarData['solarPotential']['solarPanelConfigs'][0]['yearlyEnergyDcKwh'])) : '0';
-                                                }
-                                                ?>
-                                            </span>
+                                            <span id="yearlyEnergyValue" class="highlighted-value">0</span>
                                         </div>
-                                        <input type="hidden" id="yearlyEnergy"
-                                            value="<?php echo esc_attr($ksrad_fourPanelConfig ? $ksrad_fourPanelConfig['yearlyEnergyDcKwh'] : (isset($ksrad_solarData['solarPotential']['solarPanelConfigs'][0]['yearlyEnergyDcKwh']) ? $ksrad_solarData['solarPotential']['solarPanelConfigs'][0]['yearlyEnergyDcKwh'] : 0)); ?>"
-                                            required>
+                                        <input type="hidden" id="yearlyEnergy" value="0" required>
                                         <div class="input-help-left">Estimated from solar analysis</div>
                                     </div>
                                     <div class="install-details-cell install-details-border">
