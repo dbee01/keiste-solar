@@ -15,7 +15,7 @@
     // ===== HELPER FUNCTIONS =====
     function formatCurrency(value, decimals = 0) {
         const num = Number(value) || 0;
-        return '€' + num.toLocaleString('en-IE', {
+        return (window.CURRENCY_SYMBOL || '') + num.toLocaleString('en-IE', {
             minimumFractionDigits: decimals,
             maximumFractionDigits: decimals
         });
@@ -141,7 +141,7 @@
                     y: {
                         title: {
                             display: window.innerWidth > 600,
-                            text: window.innerWidth > 600 ? 'Net Financial Position (€)' : '',
+                            text: window.innerWidth > 600 ? 'Net Financial Position (' + (window.CURRENCY_SYMBOL || '') + ')' : '',
                             font: {
                                 weight: '500',
                                 size: window.innerWidth > 600 ? 14 : 11
@@ -149,7 +149,7 @@
                         },
                         ticks: {
                             callback: function (value) {
-                                return '€' + value.toLocaleString('en-IE', { maximumFractionDigits: 0 });
+                                return (window.CURRENCY_SYMBOL || '') + value.toLocaleString('en-IE', { maximumFractionDigits: 0 });
                             },
                             font: { size: window.innerWidth > 600 ? 13 : 10 }
                         },

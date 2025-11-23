@@ -1,6 +1,6 @@
 <?php
 /**
- * Keiste Solar Analysis - Plugin Initialization
+ * Keiste Solar Report - Plugin Initialization
  * Handles WordPress integration, shortcodes, and asset loading
  * Version: 1.0.0
  */

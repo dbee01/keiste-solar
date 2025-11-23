@@ -49,13 +49,9 @@
 
     function fmtEuro(x) {
         try {
-            return new Intl.NumberFormat('en-IE', {
-                style: 'currency',
-                currency: 'EUR',
-                maximumFractionDigits: 0
-            }).format(x);
+            return (window.CURRENCY_SYMBOL || '') + Math.round(x).toLocaleString('en-IE');
         } catch {
-            return `€${Math.round(x).toLocaleString('en-IE')}`;
+            return `${window.CURRENCY_SYMBOL || ''}${Math.round(x).toLocaleString('en-IE')}`;
         }
     }
 
@@ -266,7 +262,7 @@
         setTxt('panelCount', fmtNum(state.panels, 0));
         setTxt('yearlyEnergy', fmtNum(figs.yearlyEnergyKWh, 0) + ' kWh');
         setTxt('monthlyBill', fmtEuro(state.billMonthly));
-        setTxt('annualIncrease', (ANNUAL_INCREASE * 100).toFixed(1) + '%');
+        setTxt('annualIncrease', (ANNUAL_INCREASE * 100).toFixed(1));
 
         if (figs.monthly_charge < 0) {
             setTxt('netIncome', '-' + fmtEuro(Math.abs(figs.monthly_charge)));

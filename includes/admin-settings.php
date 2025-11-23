@@ -1,6 +1,6 @@
 <?php
 /**
- * Keiste Solar Analysis - Admin Settings
+ * Keiste Solar Report - Admin Settings
  * Handles WordPress admin interface for plugin settings
  * Version: 1.0.0
  */
@@ -61,7 +61,7 @@ class KSRAD_Admin {
         $this->options = get_option('ksrad_options');
         ?>
         <div class="wrap">
-            <h1>Keiste Solar Analysis Settings</h1>
+            <h1>Keiste Solar Report Settings</h1>
             <p>Configure your Google API keys and default settings for the solar analysis tool.</p>
 
             <form method="post" action="options.php">

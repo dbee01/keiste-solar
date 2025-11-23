@@ -61,6 +61,7 @@ body {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 var(--spacing-md);
+    background-color: unset !important;
 }
 
 .middle-column {
@@ -131,7 +132,13 @@ body {
     border-radius: var(--radius-md);
     border: 2px solid var(--primary-color);
     font-weight: 600;
-    text-align: center;
+    text-align: left;
+    padding-left: 3rem;
+}
+
+input[type="number"] {
+    -webkit-appearance: none;
+    padding-left: 3rem !important;
 }
 
 /* ===== Button Styles ===== */
@@ -392,6 +399,15 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 900px) {
     .install-details-row {
         flex-direction: column;
+    }
+
+    .grant-box {
+        text-align: center !important;
+    }
+
+    input[type="number"] {
+        -webkit-appearance: none;
+        padding-left: unset !important;  
     }
 
     .install-details-border {

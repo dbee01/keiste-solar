@@ -85,7 +85,7 @@
     // ===== CURRENCY FORMATTING =====
     window.formatCurrency = function (value, decimals = 0) {
         const num = Number(value) || 0;
-        return '€' + num.toLocaleString('en-IE', {
+        return (window.CURRENCY_SYMBOL || '') + num.toLocaleString('en-IE', {
             minimumFractionDigits: decimals,
             maximumFractionDigits: decimals
         });

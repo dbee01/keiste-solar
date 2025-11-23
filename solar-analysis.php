@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: Keiste Solar Analysis
+ * Plugin Name: Keiste Solar Report
  * Plugin URI: https://keiste.ie/solar-analysis
  * Description: Comprehensive solar panel analysis tool with ROI calculations, Google Solar API integration, interactive charts, and PDF report generation.
  * Version: 1.0.0
@@ -401,8 +401,8 @@ ob_start();
         .container,
         .pdf-page {
             font-family: var(--font-family);
-            background: var(--background);
             color: var(--text-color);
+            padding-bottom: 3rem;
         }
 
         h1,
@@ -567,9 +567,9 @@ ob_start();
             border-radius: var(--border-radius);
             margin-right: auto;
             padding: 0.3rem;
-            padding-left: 1rem;
             margin-left: 1rem;
             width: 250px;
+            padding-left: 3rem;
         }
 
         ::-webkit-scrollbar-thumb {
@@ -1263,9 +1263,9 @@ ob_start();
                     center: DEFAULT_CENTER,
                     zoom: 18,
                     mapTypeId: "satellite",
-                    mapTypeControl: true,
-                    streetViewControl: true,
-                    fullscreenControl: true
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: false
                 });
 
                 const marker = new google.maps.Marker({
@@ -1464,7 +1464,7 @@ ob_start();
                                             <div class="colFlex">
                                                 <i class="fas fa-exchange-alt"></i>
                                                 <div class="resultsCol" style="border-left: unset;">
-                                                    <span class="highlight" id="netIncome">€0</span>
+                                                    <span class="highlight" id="netIncome"><?php echo esc_html(ksrad_get_option('currency', '€')); ?>0</span>
                                                     <div class="ms-2 underWrite">MONTHLY INC/EXP</div>
                                                 </div>
                                             </div>
@@ -1478,7 +1478,7 @@ ob_start();
                                             <div class="colFlexRight">
                                                 <i class="fas fa-euro-sign"></i>
                                                 <div class="resultsCol">
-                                                    <span class="highlight" id="netCost">€0</span>
+                                                    <span class="highlight" id="netCost"><?php echo esc_html(ksrad_get_option('currency', '€')); ?>0</span>
                                                     <div class="ms-2 underWrite">NET INSTALL COST</div>
                                                 </div>
                                             </div>
@@ -1493,7 +1493,7 @@ ob_start();
                                             <div class="colFlexRight">
                                                 <i class="fas fa-piggy-bank"></i>
                                                 <div class="resultsCol">
-                                                    <span class="highlight" id="annualSavings">€0</span>
+                                                    <span class="highlight" id="annualSavings"><?php echo esc_html(ksrad_get_option('currency', '€')); ?>0</span>
                                                     <div class="ms-2 underWrite">ANNUAL SAVINGS (YEAR 1)</div>
                                                 </div>
                                             </div>
@@ -1504,7 +1504,7 @@ ob_start();
                                             <div class="colFlexLeft">
                                                 <i class="fas fa-chart-line"></i>
                                                 <div class="resultsCol">
-                                                    <span class="highlight" id="totalSavings">€0</span>
+                                                    <span class="highlight" id="totalSavings"><?php echo esc_html(ksrad_get_option('currency', '€')); ?>0</span>
                                                     <div class="ms-2 underWrite">25-YEAR SAVINGS</div>
                                                 </div>
                                             </div>
@@ -1839,14 +1839,14 @@ ob_start();
                                             <div>
                                                 <label for="electricityBill" class="form-label"
                                                     style="color: var(--primary-green);">Your Monthly Electricity Bill
-                                                    (€)</label>
+                                                    (<?php echo esc_html(ksrad_get_option('currency', '€')); ?>)</label>
                                             </div>
                                             <input type="number" min="0" class="form-control"
                                                 style="margin-right: unset;display: inline-block;text-align: right;width: 100px;"
                                                 id="electricityBill" maxlength="7" placeholder="0" required>
                                         </div>
 
-                                        <div class="col-md-6 mb-3" style="text-align: left;padding-left: 2rem;">
+                                        <div class="col-md-6 mb-3 align-center grant-box" style="padding-left: 2rem;">
                                             <div>
                                                 <input type="checkbox" id="inclGrant" checked required>
                                                 <label for="inclGrant" class="form-label"><I>Include Solar Grant (%)</I></label>
@@ -1899,7 +1899,7 @@ ob_start();
                                 <div class="install-details-row">
                                     <div class="install-details-cell">
                                         <label for="installationCost" class="form-label-left">Upfront Installation Cost
-                                            (€)</label>
+                                            (<?php echo esc_html(ksrad_get_option('currency', '€')); ?>)</label>
                                         <?php
                                         // Compute a sensible default installation cost based on a 4-panel baseline (400W panels)
                                         $ksrad_four_panel_yearly = null;
@@ -1932,7 +1932,7 @@ ob_start();
                                         <div class="input-help-left">Total installation cost (not including grant)</div>
                                     </div>
                                     <div class="install-details-cell install-details-border">
-                                        <label for="grant" class="form-label-right">Available Grant (€)</label>
+                                        <label for="grant" class="form-label-right">Available Grant (<?php echo esc_html(ksrad_get_option('currency', '€')); ?>)</label>
                                         <div class="energy-display-right"><span id="grant"
                                                 class="highlighted-value">715.80</span></div>
                                         <div class="input-help-right">30% of installation cost (max €162,000)</div>
@@ -1942,7 +1942,7 @@ ob_start();
                                     <div class="install-details-cell">
                                         <label for="panelCount" class="form-label-left">Number of Panels</label>
                                         <div class="energy-display-left"><span id="panelCount"
-                                                class="highlighted-value">4</span> <span class="unit">panels</span></div>
+                                                class="highlighted-value">4</span></div>
                                         <div class="input-help-left">Total solar panels to be installed</div>
                                     </div>
                                     <div class="install-details-cell install-details-border">
@@ -1954,7 +1954,7 @@ ob_start();
                                 </div>
                                 <div class="install-details-row">
                                     <div class="install-details-cell">
-                                        <label for="yearlyEnergy" class="form-label-left">Energy Production</label>
+                                        <label for="yearlyEnergy" class="form-label-left">Annual Energy Production (KWh)</label>
                                         <div class="energy-display-left">
                                             <span id="yearlyEnergyValue" class="highlighted-value">
                                                 <?php
@@ -1974,7 +1974,6 @@ ob_start();
                                                 }
                                                 ?>
                                             </span>
-                                            <span class="unit">kWh</span>
                                         </div>
                                         <input type="hidden" id="yearlyEnergy"
                                             value="<?php echo esc_attr($ksrad_fourPanelConfig ? $ksrad_fourPanelConfig['yearlyEnergyDcKwh'] : (isset($ksrad_solarData['solarPotential']['solarPanelConfigs'][0]['yearlyEnergyDcKwh']) ? $ksrad_solarData['solarPotential']['solarPanelConfigs'][0]['yearlyEnergyDcKwh'] : 0)); ?>"
@@ -1993,10 +1992,10 @@ ob_start();
                                         <label for="monthlyBill" class="form-label-left">Electricity Bill (Monthly)</label>
                                         <div class="energy-display-left"><span id="monthlyBill"
                                                 class="highlighted-value">0</span></div>
-                                        <div class="input-help-left">Current monthly electricity expense (€)</div>
+                                        <div class="input-help-left">Current monthly electricity expense (<?php echo esc_html(ksrad_get_option('currency', '€')); ?>)</div>
                                     </div>
                                     <div class="install-details-cell install-details-border">
-                                        <label for="annualIncrease" class="form-label-right">Annual Price Increase (%)</label>
+                                        <label for="annualIncrease" class="form-label-right">Annual Price Increase</label>
                                         <div class="energy-display-right"><span id="annualIncrease"
                                                 class="highlighted-value"><?php echo esc_html(ksrad_get_option('annual_price_increase', '5')); ?></span></div>
                                         <div class="input-help-right">Expected electricity price inflation</div>
@@ -2143,10 +2142,11 @@ ob_start();
                                 return totalCost;
                             }
                             // Currency formatting helper (JS)
+                            const CURRENCY_SYMBOL = '<?php echo esc_js(ksrad_get_option('currency', '€')); ?>';
                             function formatCurrency(value, decimals = 0) {
-                                // Use en-IE locale formatting and prefix with Euro sign
+                                // Use locale formatting and prefix with currency symbol from settings
                                 const num = Number(value) || 0;
-                                return '€' + num.toLocaleString('en-IE', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+                                return CURRENCY_SYMBOL + num.toLocaleString('en-IE', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
                             }
 
 
@@ -2169,7 +2169,7 @@ ob_start();
                                 }
 
                                 function fmt(v, d = 0) {
-                                    return (typeof formatCurrency === 'function') ? formatCurrency(v, d) : ('€' + Number(v).toLocaleString());
+                                    return (typeof formatCurrency === 'function') ? formatCurrency(v, d) : (CURRENCY_SYMBOL + Number(v).toLocaleString());
                                 }
 
                                 function updateCosts() {
@@ -2653,12 +2653,12 @@ ob_start();
                         y: {
                             title: {
                                 display: window.innerWidth > 600,
-                                text: window.innerWidth > 600 ? 'Net Financial Position (€)' : '',
+                                text: window.innerWidth > 600 ? 'Net Financial Position (' + CURRENCY_SYMBOL + ')' : '',
                                 font: { weight: '500', size: window.innerWidth > 600 ? 14 : 11 }
                             },
                             ticks: {
                                 callback: function (value) {
-                                    return '€' + value.toLocaleString('en-IE', { maximumFractionDigits: 0 });
+                                    return CURRENCY_SYMBOL + value.toLocaleString('en-IE', { maximumFractionDigits: 0 });
                                 },
                                 font: { size: window.innerWidth > 600 ? 13 : 10 }
                             },
@@ -2772,6 +2772,7 @@ ob_start();
 
             // Financial
             const CORPORATION_TAX = 0.125;        // 12.5%
+            const CURRENCY_SYMBOL = '<?php echo esc_js(ksrad_get_option('currency', '€')); ?>';  // Currency from admin settings
             const SEAI_GRANT_RATE = <?php echo esc_js(ksrad_get_option('seai_grant_rate', '30') / 100); ?>;         // Grant rate from admin settings
             const SEAI_GRANT_CAP = <?php echo esc_js(ksrad_get_option('seai_grant_cap', '162000')); ?>;        // Grant cap from admin settings
             const LOAN_APR_DEFAULT = 0.07;        // 7% APR
@@ -2806,8 +2807,8 @@ ob_start();
             const clamp = (x, lo, hi) => Math.min(Math.max(x, lo), hi);
 
             function fmtEuro(x) {
-                try { return new Intl.NumberFormat('en-IE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(x); }
-                catch { return `€${Math.round(x).toLocaleString('en-IE')}`; }
+                try { return CURRENCY_SYMBOL + Math.round(x).toLocaleString('en-IE'); }
+                catch { return `${CURRENCY_SYMBOL}${Math.round(x).toLocaleString('en-IE')}`; }
             }
             function fmtNum(x, digits = 2) {
                 return Number(x || 0).toLocaleString('en-IE', { maximumFractionDigits: digits });
@@ -3323,11 +3324,11 @@ ob_start();
                     const el = byId(id);
                     if (el && el.tagName !== 'INPUT') el.textContent = txt;
                 };
-                setZero('netIncome', '€0');
-                setZero('netCost', '€0');
+                setZero('netIncome', CURRENCY_SYMBOL + '0');
+                setZero('netCost', CURRENCY_SYMBOL + '0');
                 setZero('paybackPeriod', '0 yrs');
-                setZero('annualSavings', '€0');
-                setZero('totalSavings', '€0');
+                setZero('annualSavings', CURRENCY_SYMBOL + '0');
+                setZero('totalSavings', CURRENCY_SYMBOL + '0');
                 setZero('roi', '0%');
                 setZero('co2Reduction', '0');
                 

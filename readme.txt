@@ -1,4 +1,4 @@
-=== Keiste Solar Analysis ===
+=== Keiste Solar Report ===
 Contributors: keiste
 Tags: solar, solar panels, roi calculator, google solar api, energy analysis
 Requires at least: 5.8
@@ -12,14 +12,14 @@ Comprehensive solar panel analysis tool with ROI calculations, Google Solar API 
 
 == Description ==
 
-Keiste Solar Analysis is a powerful WordPress plugin that provides comprehensive solar panel analysis for any location in Ireland (expandable to other regions). Using Google's Solar API, it delivers accurate solar potential assessments, financial projections, and detailed ROI calculations.
+Keiste Solar Analysis is a powerful WordPress plugin that provides comprehensive solar panel analysis for Ireland, the UK, the USA and many other regions. Using Google's Solar API, it delivers accurate solar potential assessments, financial projections, and detailed ROI calculations.
 
 = Key Features =
 
 * **Google Solar API Integration** - Real-time solar potential data for any address
 * **Interactive Address Search** - Google Maps autocomplete for easy location selection
 * **Financial Analysis** - Detailed ROI calculations with customizable parameters
-* **SEAI Grant Integration** - Automatic grant calculations based on Irish government schemes
+* **Grant Integration** - Automatic grant calculations based on government schemes
 * **Interactive Charts** - Visual break-even analysis and energy production projections
 * **PDF Report Generation** - Professional downloadable reports for clients
 * **Mobile Responsive** - Fully optimized for all devices
@@ -67,7 +67,7 @@ Keiste Solar Analysis is a powerful WordPress plugin that provides comprehensive
    - Enter your Google Solar API key
    - Configure default values for:
      * Installation costs per kW
-     * SEAI grant rates and caps
+     * Grant rates and caps
      * Electricity costs and inflation rates
      * Export tariff rates
      * Loan terms and interest rates
@@ -85,7 +85,21 @@ Yes, you need a Google Solar API key to fetch solar potential data. You can obta
 
 = Which countries are supported? =
 
-Currently optimized for Ireland with SEAI grant calculations. The plugin can be adapted for other countries by adjusting the grant settings and default parameters in the admin panel.
+The plugin supports solar analysis in regions where Google Solar API provides coverage. See the Country Coverage section below for a visual map of supported areas.
+
+== Country Coverage ==
+
+The Keiste Solar Report plugin leverages Google's Solar API, which provides solar potential data for numerous countries and regions worldwide. Coverage includes:
+
+* **HIGH resolution**: United States, Canada, most of Europe (including Ireland, UK, Germany, France, Spain, Italy, etc.), Japan, South Korea, and others
+* **MEDIUM resolution**: Additional European countries, parts of Asia
+* **BASE resolution**: South America (including Brazil, Colombia, Bolivia), parts of Africa, Southeast Asia, Australia
+
+![Google Solar API Coverage Map](assets/images/google-solar-coverage-map.png)
+
+The map above shows the current global coverage of the Google Solar API. Areas in pink/purple indicate HIGH or MEDIUM resolution coverage, while areas in orange indicate BASE resolution coverage.
+
+**Note:** The plugin can be adapted for any supported country by adjusting grant settings, currency, electricity rates, and other default parameters in the admin panel (Settings > Keiste Solar).
 
 = Can I customize the ROI calculations? =
 
@@ -128,7 +142,7 @@ Yes, you can use the plugin on multiple WordPress installations. Each site will 
 * Initial release
 * Google Solar API integration
 * ROI calculator with customizable parameters
-* SEAI grant calculations
+* Solar grant calculations
 * Interactive charts (Chart.js)
 * PDF report generation (jsPDF)
 * Google Maps address autocomplete
@@ -163,6 +177,6 @@ This plugin sends address data to Google's Solar API and Maps API for analysis. 
 
 = Links =
 
-* [Plugin Homepage](https://keiste.ie/solar-analysis)
-* [Documentation](https://keiste.ie/solar-analysis/docs)
-* [Support](https://keiste.com/contact)
+* [Plugin Homepage](https://keiste.ie/keiste-solar-report)
+* [Documentation](https://keiste.ie/keiste-solar-report/docs)
+* [Support](https://keiste.com/)
