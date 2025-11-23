@@ -490,3 +490,688 @@ input[type="range"]::-moz-range-thumb {
         page-break-after: always;
     }
 }
+
+/* ===== Additional Component Styles ===== */
+
+/* FontAwesome icon style */
+.fas {
+    color: var(--primary-green);
+    font-size: 2.2rem;
+    display: inline-block;
+    text-align: center;
+    margin-right: 0.5rem;
+}
+
+/* Results column style */
+.resultsCol {
+    max-width: 66%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+/* Highlighted value style */
+.highlight {
+    color: var(--primary-green);
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* Underline/description style */
+.underWrite {
+    color: var(--dark-blue);
+    font-size: 0.95em;
+    font-weight: 500;
+    width: 200px;
+    text-align: center;
+}
+
+#netIncome .underWrite {
+    text-align: center;
+}
+
+/* Flex row for icon and result columns */
+.colFlex {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    margin: 1rem 0;
+}
+
+.colFlex>.resultsCol {
+    border-left: 1px solid var(--primary-green);
+    border-right: 1px solid var(--primary-green);
+    padding: 0 2rem;
+    margin: 0;
+}
+
+.colFlex>.resultsCol:first-child {
+    border-left: none;
+}
+
+.colFlex>.resultsCol:last-child {
+    border-right: none;
+}
+
+/* Flex row for icon and result columns */
+.colFlexLeft {
+    display: flex;
+    align-items: center;
+    margin: 1rem;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: left;
+}
+
+/* Flex row for icon and result columns */
+.colFlexRight {
+    display: flex;
+    align-items: center;
+    margin: 1rem;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: right;
+}
+
+/* Ensure icon and text align vertically with a fixed icon width */
+.colFlex, .colFlexLeft, .colFlexRight {
+    gap: 0.75rem;
+}
+
+.colFlex i.fas, .colFlexLeft i.fas, .colFlexRight i.fas {
+    flex: 0 0 56px; /* fixed icon slot */
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    margin: 0;
+}
+
+/* Make the textual column take remaining space and align vertically */
+.resultsCol {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    text-align: left;
+    width: calc(100% - 72px);
+    box-sizing: border-box;
+}
+
+.resultsCol .highlight {
+    text-align: center;
+    width: 200px;
+}
+
+.resultsCol .underWrite {
+    text-align: center;
+    margin-top: 0.25rem;
+}
+
+/* Keiste.com inspired branding for Solar Analysis Plugin */
+:root {
+    --primary-green: #2a9d8f;
+    --accent-yellow: #ffd600;
+    --dark-blue: #264653;
+    --light-green: #e9f5f2;
+    --text-color: #222;
+    --background: #f5fafd;
+    --border-radius: 10px;
+    --font-family: 'Inter', 'Segoe UI', 'Arial', sans-serif;
+}
+
+body,
+.container,
+.pdf-page {
+    font-family: var(--font-family);
+    color: var(--text-color);
+    padding-bottom: 3rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-family);
+    color: var(--dark-blue);
+    font-weight: 700;
+}
+
+.btn,
+.btn-primary {
+    background: var(--primary-green);
+    color: #fff;
+    border: none;
+    border-radius: var(--border-radius);
+    font-family: var(--font-family);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    box-shadow: 0 2px 8px rgba(42, 157, 143, 0.08);
+    transition: background 0.2s;
+}
+
+#netIncome {
+    width: 200px;
+    text-align: center;
+    font-size: 2rem !important;
+}
+
+.fa-exchange-alt {
+    font-size: 2rem !important;
+}
+
+.btn:hover,
+.btn-primary:hover {
+    background: var(--dark-blue);
+    color: #fff;
+}
+
+.form-label-left {
+    font-weight: 600;
+    color: var(--dark-blue);
+    margin-bottom: 0.5rem;
+    text-align: right;
+    width: 300px;
+    max-width: 85%;
+}
+
+.form-label-right {
+    font-weight: 600;
+    color: var(--dark-blue);
+    margin-bottom: 0.5rem;
+    text-align: left;
+    width: 300px;
+    max-width: 85%;
+}
+
+input,
+select,
+textarea,
+.form-control {
+    border-radius: var(--border-radius);
+    border: 1px solid var(--primary-green);
+    font-family: var(--font-family);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--accent-yellow);
+    outline: none;
+}
+
+.input-help-right {
+    font-size: 0.85em;
+    color: var(--dark-blue);
+    margin-top: 0.25rem;
+    text-align: right;
+}
+
+.input-help-left {
+    font-size: 0.85em;
+    color: var(--dark-blue);
+    margin-top: 0.25rem;
+    text-align: right;
+}
+
+.section,
+.results-section,
+.pdf-page {
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 12px rgba(38, 70, 83, 0.06);
+    padding: 2rem 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.highlight,
+.grant-display,
+.installation-cost-display {
+    color: var(--primary-green);
+    font-weight: 700;
+}
+
+.underWrite {
+    color: var(--dark-blue);
+    font-size: 0.95em;
+    font-weight: 500;
+}
+
+input[type=range].custom-slider {
+    background: var(--light-green);
+}
+
+input[type=range].custom-slider::-webkit-slider-thumb {
+    background: var(--accent-yellow);
+}
+
+input[type=range].custom-slider::-moz-range-thumb {
+    background: var(--accent-yellow);
+}
+
+.downloadLink {
+    color: var(--primary-green);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.downloadLink:hover {
+    color: var(--accent-yellow);
+}
+
+.chart-container {
+    background: var(--light-green);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 6px rgba(42, 157, 143, 0.07);
+}
+
+.energy-display-left {
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid var(--accent-yellow);
+    color: var(--primary-green);
+    border-radius: var(--border-radius);
+    text-align: right;
+    margin-left: auto;
+    margin-right: 1.7rem;
+    padding: 0.3rem;
+    padding-right: 3rem;
+    width: 250px;
+}
+
+.energy-display-right {
+    background: rgba(255, 215, 0, 0.1);
+    border: 1px solid var(--accent-yellow);
+    color: var(--primary-green);
+    border-radius: var(--border-radius);
+    margin-right: auto;
+    padding: 0.3rem;
+    margin-left: 1rem;
+    width: 250px;
+    padding-left: 3rem;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--primary-green);
+    border-radius: var(--border-radius);
+}
+
+::-webkit-scrollbar {
+    background: var(--light-green);
+}
+
+/* ROI Results Layout (matches provided image) */
+.results-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.roi-main-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.roi-main-value {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.roi-main-label {
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--dark-blue);
+    font-weight: 500;
+}
+
+.roi-columns-row {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    max-width: 600px;
+}
+
+.roi-col {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 2rem;
+}
+
+.roi-divider {
+    width: 1px;
+    background: var(--primary-green);
+    min-height: 180px;
+    margin: 0 0.5rem;
+    align-self: stretch;
+}
+
+/* Mobile responsive tweaks for ROI results */
+@media (max-width: 768px) {
+
+    /* Stack icon+value vertically for better mobile alignment */
+    .colFlex,
+    .colFlexLeft,
+    .colFlexRight {
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 2.4rem 0 !important;
+        gap: 0.35rem;
+        font-size: xx-large;
+    }
+
+    .colFlex i.fas,
+    .colFlexLeft i.fas,
+    .colFlexRight i.fas {
+        margin-bottom: -1.5rem !important;
+    }
+
+    /* Center align electricity bill column */
+    .elecbill {
+        text-align: center !important;
+        border-right: none !important;
+        padding-right: 0 !important;
+    }
+
+    /* Remove dividing borders in stacked layout and reduce padding */
+    .colFlex>.resultsCol {
+        border-left: none !important;
+        border-right: none !important;
+        padding: 0.5rem 0.75rem !important;
+    }
+
+    /* Make result columns full width and center text */
+    .resultsCol {
+        max-width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        margin: 0.25rem 0 !important;
+    }
+
+    /* Slightly larger highlight for readability on small devices */
+    .highlight {
+        font-size: 1.4rem !important;
+    }
+
+    /* Reduce icon size and move it above values */
+    .fas {
+        font-size: 1.6rem !important;
+        display: block !important;
+        margin: 0 0 0.35rem 0 !important;
+    }
+
+    #netIncome {
+        width: 150px;
+        text-align: center !important;
+    }
+
+    /* Make the ROI columns stack vertically and remove divider */
+    .roi-columns-row {
+        flex-direction: column !important;
+        align-items: center !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .roi-divider {
+        display: none !important;
+    }
+
+    /* Remove any column right/left borders added inline (desktop styles) when stacked on mobile */
+    .results-section .col-md-6,
+    .results-section .col-md-6[style] {
+        border-right: none !important;
+        border-left: none !important;
+    }
+
+    .form-control {
+        text-align: center !important;
+    }
+
+    /* Tighter spacing for labels */
+    .underWrite {
+        font-size: 0.92rem !important;
+    }
+
+    #netIncome .underWrite {
+        text-align: center !important;
+    }
+
+    .results-section {
+        padding: 1rem !important;
+    }
+
+    .roi-main-value {
+        font-size: 1.6rem !important;
+    }
+}
+
+.logo-image:hover {
+    transform: scale(1.05);
+}
+
+.place-autocomplete-element-place-name {
+    text-align: left !important;
+}
+
+.place-autocomplete-element-text-div {
+    text-align: left !important;
+}
+
+.place-autocomplete-element-row .place-autocomplete-element-text-div {
+    text-align: left !important;
+}
+
+.map-section {
+    text-align: center;
+    margin-bottom: 2rem;
+    background-color: unset;
+}
+
+/* Google Maps autocomplete dropdown items */
+.pac-container,
+.pac-item,
+.pac-item span {
+    text-align: left !important;
+}
+
+.pac-item {
+    padding: 8px !important;
+}
+
+.header-image {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    margin-bottom: 2rem;
+    border: 4px solid white;
+}
+
+/* Table Styling */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table th {
+    background-color: var(--primary-green);
+    color: white;
+    font-weight: 600;
+    padding: 1.25rem 1rem;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: none;
+}
+
+.table td {
+    padding: 1.25rem 1rem;
+    border-top: 1px solid var(--border-color);
+    background: white;
+    font-size: 0.95rem;
+    vertical-align: middle;
+}
+
+.table tbody tr:hover td {
+    background: var(--background);
+    transition: all 0.2s ease;
+}
+
+.site-overview {
+    margin: 0 auto;
+}
+
+.middle-column {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.table {
+    box-shadow: var(--input-shadow);
+    margin: 1.5rem 0;
+}
+
+/* Custom Collapse Button */
+.btn-link {
+    color: var(--secondary-green);
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-link:hover {
+    color: var(--primary-green);
+}
+
+.btn-link small {
+    font-weight: normal;
+    opacity: 0.7;
+}
+
+/* Google Maps and Autocomplete Styles */
+#map {
+    height: 100%;
+    margin-bottom: 3rem;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#place-autocomplete-card {
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+    margin: 10px;
+    padding: 5px;
+    font-family: Roboto, sans-serif;
+    font-size: large;
+    font-weight: bold;
+}
+
+gmp-place-autocomplete {
+    width: 450px;
+    max-width: 95%;
+}
+
+/* Ensure autocomplete input has proper contrast on mobile */
+gmp-place-autocomplete input,
+#pacInput {
+    background-color: #ffffff !important;
+    color: #222222 !important;
+    -webkit-text-fill-color: #222222 !important;
+    -webkit-opacity: 1 !important;
+}
+
+/* Override any browser autofill styles */
+gmp-place-autocomplete input:-webkit-autofill,
+#pacInput:-webkit-autofill {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+    -webkit-text-fill-color: #222222 !important;
+}
+
+#infowindow-content .title {
+    font-weight: bold;
+}
+
+#map #infowindow-content {
+    display: inline;
+}
+
+#map {
+    height: 50vh;
+    margin-bottom: 3rem;
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+    display: none;
+    border: 2px solid var(--light-green);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    backdrop-filter: blur(5px);
+}
+
+#pacContainer {
+    text-align: -webkit-center;
+    margin-bottom: 20px;
+    max-width: 450px;
+    width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#reportHeader {
+    margin-top: 1.5rem;
+}
+
+.form-control {
+    width: 250px;
+    text-align: left;
+    margin-right: auto;
+    margin-left: 1.5rem;
+}
+
+.form-label {
+    text-align: center;
+}
+
+.form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(27, 77, 62, 0.25);
+    border-color: var(--primary-green);
+}

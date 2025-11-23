@@ -30,7 +30,7 @@
     const DAY_POWER_AVG = 1.85;           // kWh/day per 400W panel
 
     // UI defaults
-    const DEFAULT_PANELS = 4;
+    const DEFAULT_PANELS = 0;
     const DEFAULT_EXPORT_PERCENT = 0.4;
     const DEFAULT_RETAIL_RATE = 0.35;
     const DEFAULT_FEED_IN_TARIFF = FEED_IN_TARIFF_DEFAULT;
@@ -83,7 +83,7 @@
         const inclLoan = !!(byId('inclLoan')?.checked);
 
         const panelCountEl = byId('panelCount');
-        const panels = panelCountEl ? clamp(num(panelCountEl.value), 1, 10000) : DEFAULT_PANELS;
+        const panels = panelCountEl ? clamp(num(panelCountEl.value), 0, 10000) : DEFAULT_PANELS;
 
         const exportRate = (() => {
             const val = byId('exportRate')?.value;
@@ -349,10 +349,6 @@
 
     // ===== INITIALIZATION =====
     function initialPopulate() {
-        if (byId('panelCount') && !byId('panelCount').value) {
-            byId('panelCount').value = DEFAULT_PANELS;
-        }
-
         // Don't populate ROI values on page load - keep them at zero
         // const defaultState = readInputs();
         // const figs = keyFigures({ ...defaultState, billMonthly: defaultState.billMonthly || 0 });

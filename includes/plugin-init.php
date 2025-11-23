@@ -186,6 +186,7 @@ class KSRAD_Plugin {
             'google_solar_api_key' => '',
             'google_maps_api_key' => '',
             'report_key' => '',
+            'logo_url' => '',
             'default_electricity_rate' => '0.45',
             'default_export_rate' => '40',
             'default_feed_in_tariff' => '0.21',

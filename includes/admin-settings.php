@@ -17,7 +17,19 @@ class KSRAD_Admin {
     public function __construct() {
         add_action('admin_menu', array($this, 'add_plugin_page'));
         add_action('admin_init', array($this, 'page_init'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_filter('plugin_action_links_' . plugin_basename(KSRAD_PLUGIN_BASENAME), array($this, 'add_settings_link'));
+    }
+    
+    /**
+     * Enqueue admin scripts for media uploader
+     */
+    public function enqueue_admin_scripts($hook) {
+        // Only load on our settings page
+        if ('toplevel_page_keiste-solar' !== $hook && 'settings_page_keiste-solar-settings' !== $hook) {
+            return;
+        }
+        wp_enqueue_media();
     }
     
     /**
@@ -172,6 +184,22 @@ class KSRAD_Admin {
             array($this, 'report_key_callback'),
             'keiste-solar-admin',
             'api_keys_section'
+        );
+        
+        // Branding Section
+        add_settings_section(
+            'branding_section',
+            'Branding',
+            array($this, 'branding_info'),
+            'keiste-solar-admin'
+        );
+        
+        add_settings_field(
+            'logo_url',
+            'Report Logo',
+            array($this, 'logo_url_callback'),
+            'keiste-solar-admin',
+            'branding_section'
         );
         
         // Default Values Section
@@ -379,6 +407,10 @@ class KSRAD_Admin {
             $new_input['enable_pdf_export'] = (bool)$input['enable_pdf_export'];
         }
         
+        if (isset($input['logo_url'])) {
+            $new_input['logo_url'] = esc_url_raw($input['logo_url']);
+        }
+        
         return $new_input;
     }
     
@@ -387,6 +419,10 @@ class KSRAD_Admin {
      */
     public function api_keys_info() {
         echo '<p>Enter your Google API keys. These are required for the solar analysis tool to function.</p>';
+    }
+    
+    public function branding_info() {
+        echo '<p>Customize the appearance of your solar reports with your company logo.</p>';
     }
     
     public function default_values_info() {
@@ -414,6 +450,61 @@ class KSRAD_Admin {
             isset($this->options['google_maps_api_key']) ? esc_attr($this->options['google_maps_api_key']) : ''
         );
         echo '<p class="description">Required for location search and map display.</p>';
+    }
+    
+    public function logo_url_callback() {
+        $logo_url = isset($this->options['logo_url']) ? esc_attr($this->options['logo_url']) : '';
+        ?>
+        <div class="logo-upload-wrapper">
+            <input type="text" id="logo_url" name="ksrad_options[logo_url]" value="<?php echo $logo_url; ?>" class="regular-text" readonly />
+            <button type="button" class="button upload-logo-button">Upload Logo</button>
+            <button type="button" class="button remove-logo-button" style="<?php echo empty($logo_url) ? 'display:none;' : ''; ?>">Remove</button>
+            <div class="logo-preview" style="margin-top: 10px;">
+                <?php if (!empty($logo_url)): ?>
+                    <img src="<?php echo esc_url($logo_url); ?>" style="max-width: 200px; height: auto;" />
+                <?php endif; ?>
+            </div>
+        </div>
+        <p class="description">Upload your company logo to display on solar reports. Recommended size: 400x150px or similar.</p>
+        <script>
+        jQuery(document).ready(function($) {
+            var mediaUploader;
+            
+            $('.upload-logo-button').click(function(e) {
+                e.preventDefault();
+                
+                if (mediaUploader) {
+                    mediaUploader.open();
+                    return;
+                }
+                
+                mediaUploader = wp.media({
+                    title: 'Choose Logo',
+                    button: {
+                        text: 'Use this logo'
+                    },
+                    multiple: false
+                });
+                
+                mediaUploader.on('select', function() {
+                    var attachment = mediaUploader.state().get('selection').first().toJSON();
+                    $('#logo_url').val(attachment.url);
+                    $('.logo-preview').html('<img src="' + attachment.url + '" style="max-width: 200px; height: auto;" />');
+                    $('.remove-logo-button').show();
+                });
+                
+                mediaUploader.open();
+            });
+            
+            $('.remove-logo-button').click(function(e) {
+                e.preventDefault();
+                $('#logo_url').val('');
+                $('.logo-preview').html('');
+                $(this).hide();
+            });
+        });
+        </script>
+        <?php
     }
     
     public function default_electricity_rate_callback() {

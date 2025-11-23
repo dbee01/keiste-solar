@@ -24,7 +24,7 @@ if (!defined('WPINC')) {
 
 // Define plugin constants (only once) with ksrad_ namespace
 if (!defined('KSRAD_VERSION')) {
-    define('KSRAD_VERSION', '1.0.3');
+    define('KSRAD_VERSION', '1.0.5');
 }
 if (!defined('KSRAD_PLUGIN_DIR')) {
     define('KSRAD_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -137,7 +137,7 @@ if (!function_exists('ksrad_fetch_solar_data')) {
 // phpcs:disable WordPress.Security.NonceVerification.Recommended -- GET parameters are for display only, not form submission
 $ksrad_latitude = isset($_GET['lat']) ? floatval(sanitize_text_field(wp_unslash($_GET['lat']))) : 51.886656;
 $ksrad_longitude = isset($_GET['lng']) ? floatval(sanitize_text_field(wp_unslash($_GET['lng']))) : -8.535580;
-$ksrad_business_name = isset($_GET['business_name']) ? sanitize_text_field(wp_unslash($_GET['business_name'])) : 'Solar Report';
+$ksrad_business_name = isset($_GET['business_name']) ? sanitize_text_field(wp_unslash($_GET['business_name'])) : '';
 
 // Check if this is an AJAX request (has lat/lng parameters) or initial page load
 $ksrad_isAjaxRequest = isset($_GET['lat']) && isset($_GET['lng']);
@@ -256,683 +256,8 @@ ob_start();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keiste Solar Report: <?php echo esc_html($ksrad_business_name); ?></title>
-
-    <style>
-        /* FontAwesome icon style */
-        .fas {
-            color: var(--primary-green);
-            font-size: 2.2rem;
-            display: inline-block;
-            text-align: center;
-            margin-right: 0.5rem;
-        }
-
-        /* Results column style */
-        .resultsCol {
-            max-width: 66%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            display: inline-block;
-            text-align: center;
-        }
-
-        /* Highlighted value style */
-        .highlight {
-            color: var(--primary-green);
-            font-weight: 700;
-            font-size: 1.5rem;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        /* Underline/description style */
-        .underWrite {
-            color: var(--dark-blue);
-            font-size: 0.95em;
-            font-weight: 500;
-            width: 200px;
-            text-align: center;
-        }
-
-        #netIncome .underWrite {
-            text-align: center;
-        }
-
-        /* Flex row for icon and result columns */
-        .colFlex {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            align-content: center;
-            margin: 1rem 0;
-        }
-
-        .colFlex>.resultsCol {
-            border-left: 1px solid var(--primary-green);
-            border-right: 1px solid var(--primary-green);
-            padding: 0 2rem;
-            margin: 0;
-        }
-
-        .colFlex>.resultsCol:first-child {
-            border-left: none;
-        }
-
-        .colFlex>.resultsCol:last-child {
-            border-right: none;
-        }
-
-        /* Flex row for icon and result columns */
-        .colFlexLeft {
-            display: flex;
-            align-items: center;
-            margin: 1rem;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            align-content: center;
-            justify-content: left;
-        }
-
-        /* Flex row for icon and result columns */
-        .colFlexRight {
-            display: flex;
-            align-items: center;
-            margin: 1rem;
-            flex-direction: row;
-            flex-wrap: nowrap;
-            align-content: center;
-            justify-content: right;
-        }
-
-        /* Ensure icon and text align vertically with a fixed icon width */
-        .colFlex, .colFlexLeft, .colFlexRight {
-            gap: 0.75rem;
-        }
-
-        .colFlex i.fas, .colFlexLeft i.fas, .colFlexRight i.fas {
-            flex: 0 0 56px; /* fixed icon slot */
-            width: 56px;
-            height: 56px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.6rem;
-            margin: 0;
-        }
-
-        /* Make the textual column take remaining space and align vertically */
-        .resultsCol {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: flex-start;
-            text-align: left;
-            width: calc(100% - 72px);
-            box-sizing: border-box;
-        }
-
-        .resultsCol .highlight {
-            text-align: center;
-            width: 200px;
-        }
-
-        .resultsCol .underWrite {
-            text-align: center;
-            margin-top: 0.25rem;
-        }
-
-        /* Keiste.com inspired branding for Solar Analysis Plugin */
-        :root {
-            --primary-green: #2a9d8f;
-            --accent-yellow: #ffd600;
-            --dark-blue: #264653;
-            --light-green: #e9f5f2;
-            --text-color: #222;
-            --background: #f5fafd;
-            --border-radius: 10px;
-            --font-family: 'Inter', 'Segoe UI', 'Arial', sans-serif;
-        }
-
-        body,
-        .container,
-        .pdf-page {
-            font-family: var(--font-family);
-            color: var(--text-color);
-            padding-bottom: 3rem;
-        }
-
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-            font-family: var(--font-family);
-            color: var(--dark-blue);
-            font-weight: 700;
-        }
-
-        .btn,
-        .btn-primary {
-            background: var(--primary-green);
-            color: #fff;
-            border: none;
-            border-radius: var(--border-radius);
-            font-family: var(--font-family);
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            box-shadow: 0 2px 8px rgba(42, 157, 143, 0.08);
-            transition: background 0.2s;
-        }
-
-        #netIncome {
-            width: 200px;
-            text-align: center;
-            font-size: 2rem !important;
-        }
-
-        .fa-exchange-alt {
-            font-size: 2rem !important;
-        }   
-
-        .btn:hover,
-        .btn-primary:hover {
-            background: var(--dark-blue);
-            color: #fff;
-        }
-
-        .form-label-left {
-            font-weight: 600;
-            color: var(--dark-blue);
-            margin-bottom: 0.5rem;
-            text-align: right;
-            width: 300px;
-            max-width: 85%;
-        }
-
-        .form-label-right {
-            font-weight: 600;
-            color: var(--dark-blue);
-            margin-bottom: 0.5rem;
-            text-align: left;
-            width: 300px;
-            max-width: 85%;
-        }
-
-        input,
-        select,
-        textarea,
-        .form-control {
-            border-radius: var(--border-radius);
-            border: 1px solid var(--primary-green);
-            font-family: var(--font-family);
-        }
-
-        input:focus,
-        select:focus,
-        textarea:focus {
-            border-color: var(--accent-yellow);
-            outline: none;
-        }
-
-        .input-help-right {
-            font-size: 0.85em;
-            color: var(--dark-blue);
-            margin-top: 0.25rem;
-            text-align: right;
-        }
-
-        .input-help-left {
-            font-size: 0.85em;
-            color: var(--dark-blue);
-            margin-top: 0.25rem;
-            text-align: right;
-        }
-
-        .section,
-        .results-section,
-        .pdf-page {
-            background: #fff;
-            border-radius: var(--border-radius);
-            box-shadow: 0 2px 12px rgba(38, 70, 83, 0.06);
-            padding: 2rem 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .highlight,
-        .grant-display,
-        .installation-cost-display {
-            color: var(--primary-green);
-            font-weight: 700;
-        }
-
-        .underWrite {
-            color: var(--dark-blue);
-            font-size: 0.95em;
-            font-weight: 500;
-        }
-
-        input[type=range].custom-slider {
-            background: var(--light-green);
-        }
-
-        input[type=range].custom-slider::-webkit-slider-thumb {
-            background: var(--accent-yellow);
-        }
-
-        input[type=range].custom-slider::-moz-range-thumb {
-            background: var(--accent-yellow);
-        }
-
-        .downloadLink {
-            color: var(--primary-green);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .downloadLink:hover {
-            color: var(--accent-yellow);
-        }
-
-        .chart-container {
-            background: var(--light-green);
-            border-radius: var(--border-radius);
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 1px 6px rgba(42, 157, 143, 0.07);
-        }
-
-        .energy-display-left {
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid var(--accent-yellow);
-            color: var(--primary-green);
-            border-radius: var(--border-radius);
-            text-align: right;
-            margin-left: auto;
-            margin-right: 1.7rem;
-            padding: 0.3rem;
-            padding-right: 3rem;
-            width: 250px;
-        }
-
-        .energy-display-right {
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid var(--accent-yellow);
-            color: var(--primary-green);
-            border-radius: var(--border-radius);
-            margin-right: auto;
-            padding: 0.3rem;
-            margin-left: 1rem;
-            width: 250px;
-            padding-left: 3rem;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary-green);
-            border-radius: var(--border-radius);
-        }
-
-        ::-webkit-scrollbar {
-            background: var(--light-green);
-        }
-
-        /* ROI Results Layout (matches provided image) */
-        .results-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .roi-main-row {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 2rem;
-        }
-
-        .roi-main-value {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .roi-main-label {
-            text-align: center;
-            font-size: 1.1rem;
-            color: var(--dark-blue);
-            font-weight: 500;
-        }
-
-        .roi-columns-row {
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-            justify-content: center;
-            width: 100%;
-            max-width: 600px;
-        }
-
-        .roi-col {
-            flex: 1 1 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 0 2rem;
-        }
-
-        .roi-divider {
-            width: 1px;
-            background: var(--primary-green);
-            min-height: 180px;
-            margin: 0 0.5rem;
-            align-self: stretch;
-        }
-
-        /* Mobile responsive tweaks for ROI results */
-        @media (max-width: 768px) {
-
-            /* Stack icon+value vertically for better mobile alignment */
-            .colFlex,
-            .colFlexLeft,
-            .colFlexRight {
-                flex-direction: column !important;
-                align-items: center !important;
-                justify-content: center !important;
-                margin: 2.4rem 0 !important;
-                gap: 0.35rem;
-                font-size: xx-large;
-            }
-
-            .colFlex i.fas,
-            .colFlexLeft i.fas,
-            .colFlexRight i.fas {
-                margin-bottom: -1.5rem !important;
-            }
-
-            /* Center align electricity bill column */
-            .elecbill {
-                text-align: center !important;
-                border-right: none !important;
-                padding-right: 0 !important;
-            }
-
-            /* Remove dividing borders in stacked layout and reduce padding */
-            .colFlex>.resultsCol {
-                border-left: none !important;
-                border-right: none !important;
-                padding: 0.5rem 0.75rem !important;
-            }
-
-            /* Make result columns full width and center text */
-            .resultsCol {
-                max-width: 100% !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: center !important;
-                text-align: center !important;
-                margin: 0.25rem 0 !important;
-            }
-
-            /* Slightly larger highlight for readability on small devices */
-            .highlight {
-                font-size: 1.4rem !important;
-            }
-
-            /* Reduce icon size and move it above values */
-            .fas {
-                font-size: 1.6rem !important;
-                display: block !important;
-                margin: 0 0 0.35rem 0 !important;
-            }
-
-            #netIncome {
-                width: 150px;
-                text-align: center !important;
-            }
-
-            /* Make the ROI columns stack vertically and remove divider */
-            .roi-columns-row {
-                flex-direction: column !important;
-                align-items: center !important;
-                max-width: 100% !important;
-                padding: 0 !important;
-            }
-
-            .roi-divider {
-                display: none !important;
-            }
-
-            /* Remove any column right/left borders added inline (desktop styles) when stacked on mobile */
-            .results-section .col-md-6,
-            .results-section .col-md-6[style] {
-                border-right: none !important;
-                border-left: none !important;
-            }
-
-            .form-control {
-                text-align: center !important;
-            }
-
-            /* Tighter spacing for labels */
-            .underWrite {
-                font-size: 0.92rem !important;
-            }
-
-            #netIncome .underWrite {
-                text-align: center !important;
-            }
-
-            .results-section {
-                padding: 1rem !important;
-            }
-
-            .roi-main-value {
-                font-size: 1.6rem !important;
-            }
-        }
-
-        .logo-image:hover {
-            transform: scale(1.05);
-        }
-
-        .place-autocomplete-element-place-name {
-            text-align: left !important;
-        }
-
-        .place-autocomplete-element-text-div {
-            text-align: left !important;
-        }
-
-        .header-image {
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            margin-bottom: 2rem;
-            border: 4px solid white;
-        }
-
-        /* Table Styling */
-        .table {
-            border-collapse: separate;
-            border-spacing: 0;
-            width: 100%;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .table th {
-            background-color: var(--primary-green);
-            color: white;
-            font-weight: 600;
-            padding: 1.25rem 1rem;
-            font-size: 0.95rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            border: none;
-        }
-
-        .table td {
-            padding: 1.25rem 1rem;
-            border-top: 1px solid var(--border-color);
-            background: white;
-            font-size: 0.95rem;
-            vertical-align: middle;
-        }
-
-        .table tbody tr:hover td {
-            background: var(--background);
-            transition: all 0.2s ease;
-        }
-
-        .site-overview {
-            margin: 0 auto;
-        }
-
-        .middle-column {
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .table {
-            box-shadow: var(--input-shadow);
-            margin: 1.5rem 0;
-        }
-
-        /* Custom Collapse Button */
-        .btn-link {
-            color: var(--secondary-green);
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .btn-link:hover {
-            color: var(--primary-green);
-        }
-
-        .btn-link small {
-            font-weight: normal;
-            opacity: 0.7;
-        }
-    </style>
-    <!-- Scripts are enqueued via WordPress in plugin-init.php -->
-
-    <style>
-        /* 
-        * Always set the map height explicitly to define the size of the div element
-        * that contains the map. 
-        */
-        #map {
-            height: 100%;
-            margin-bottom: 3rem;
-        }
-
-        /* 
-        * Optional: Makes the sample page fill the window. 
-        */
-        html,
-        body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
-        #place-autocomplete-card {
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-            margin: 10px;
-            padding: 5px;
-            font-family: Roboto, sans-serif;
-            font-size: large;
-            font-weight: bold;
-        }
-
-        gmp-place-autocomplete {
-            width: 450px;
-            max-width: 95%;
-        }
-
-        /* Ensure autocomplete input has proper contrast on mobile */
-        gmp-place-autocomplete input,
-        #pacInput {
-            background-color: #ffffff !important;
-            color: #222222 !important;
-            -webkit-text-fill-color: #222222 !important;
-            -webkit-opacity: 1 !important;
-        }
-
-        /* Override any browser autofill styles */
-        gmp-place-autocomplete input:-webkit-autofill,
-        #pacInput:-webkit-autofill {
-            -webkit-box-shadow: 0 0 0 1000px white inset !important;
-            -webkit-text-fill-color: #222222 !important;
-        }
-
-        #infowindow-content .title {
-            font-weight: bold;
-        }
-
-        #map #infowindow-content {
-            display: inline;
-        }
-
-        #map {
-            height: 50vh;
-            margin-bottom: 3rem;
-            max-width: 450px;
-            width: 95%;
-            margin-left: auto;
-            margin-right: auto;
-            display: none;
-            border: 2px solid var(--light-green);
-            border-radius: 12px;
-            box-shadow: var(--card-shadow);
-            overflow: hidden;
-            backdrop-filter: blur(5px);
-        }
-
-        #pacContainer {
-            text-align: -webkit-center;
-            margin-bottom: 20px;
-            max-width: 450px;
-            width: 95%;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        #reportHeader {
-            text-align: center;
-            margin-top: 1.5rem;
-        }
-
-        .form-control {
-            width: 250px;
-            text-align: left;
-            margin-right: auto;
-            margin-left: 1.5rem;
-        }
-
-        .form-label {
-            text-align: center;
-        }
-
-        .form-control:focus {
-            box-shadow: 0 0 0 0.2rem rgba(27, 77, 62, 0.25);
-            border-color: var(--primary-green);
-        }
-    </style>
+    <title>Solar Report: <?php echo esc_html($ksrad_business_name); ?></title>
+    <!-- Main stylesheet loaded via WordPress in plugin-init.php -->
 
 </head>
 
@@ -968,7 +293,7 @@ ob_start();
     <dialog id="roiModal">
         <form id="roiForm" method="dialog" class="roi-modal-form">
             <?php wp_nonce_field('ksrad_roi_form', 'ksrad_roi_nonce'); ?>
-            <h3 class="roi-modal-title">Keiste Solar Report Download</h3>
+            <h3 class="roi-modal-title">Solar Report Download</h3>
             <div class="roi-form-group">
                 <label for="roiFullName">Full Name <span class="required">*</span></label>
                 <input id="roiFullName" name="fullName" type="text" class="roi-input" required autofocus
@@ -1131,21 +456,17 @@ ob_start();
     <div class="container">
 
         <div class="text-center nopdf">
-
+            <?php
+            $ksrad_logo_url = ksrad_get_option('logo_url', '');
+            if (empty($ksrad_logo_url)) {
+                // Fallback to default plugin logo if no custom logo uploaded
+                $ksrad_logo_url = KSRAD_PLUGIN_URL . 'assets/images/keiste-logo.png';
+            }
+            ?>
             <a href="https://keiste.com/">
-                <img src="<?php echo esc_url(KSRAD_PLUGIN_URL . 'assets/images/keiste-logo.png'); ?>" alt="Keiste Logo"
+                <img src="<?php echo esc_url($ksrad_logo_url); ?>" alt="Company Logo"
                     class="img-fluid logo-image" style="max-width: 130px; width: 100%;">
             </a>
-
-        </div>
-
-        <div class="text-center mb-4">
-
-            <div class="report-header" id="reportHeader">
-                <h1>Keiste Solar Report</h1>
-                <h3><em><?php echo esc_html($ksrad_business_name); ?></em></h3>
-                <h6 class="mb-4">by Dara, <a href="https://keiste.com/">Keiste</a></h6>
-            </div>
 
         </div>
 
@@ -1162,11 +483,23 @@ ob_start();
             </div>
         <?php endif; ?>
 
+
+        <div class="text-center mb-4">
+
+            <div class="report-header" id="reportHeader">
+                <h3><em><?php echo esc_html($ksrad_business_name); ?></em></h3>
+            </div>
+
+        </div>
+
+
+
         <div id="pacContainer" class="nopdf" style="display: none;">
-            <gmp-place-autocomplete id="pac" fields="id,location,formattedAddress,displayName" countries="ie" style="min-width: 320px;
+            <gmp-place-autocomplete id="pac" fields="id,location,formattedAddress,displayName" style="min-width: 320px;
                 placeholder: 'Search your address';
                 background-color: #fff;
                 color: #222;
+                text-align: left;
                 font-size: 16px;
                 padding: 8px 12px;
                 border: 1px solid #ccc;
@@ -1175,9 +508,12 @@ ob_start();
                 <input id="pacInput" placeholder="Search your address" />
             </gmp-place-autocomplete>
 
-            <div id="map" style="height: 400px; width: 100%;" class="nopdf"></div>
+        </div>
 
-
+        <div class="row">
+            <div class="section map-section col-md-12" id="map-section">
+                <div id="map" style="height: 400px;width: 100%;"></div>
+            </div>
         </div>
 
         <script>
@@ -1203,7 +539,16 @@ ob_start();
                     lat: Number.isFinite(LAT) ? LAT : 51.886656,
                     lng: Number.isFinite(LNG) ? LNG : -8.535580
                 };
-
+                
+                // Country restriction from dashboard settings
+                const COUNTRY_SETTING = <?php echo wp_json_encode(ksrad_get_option('country', 'Ireland')); ?>;
+                const COUNTRY_CODE_MAP = {
+                    'Ireland': 'ie',
+                    'UK': 'gb',
+                    'United States': 'us',
+                    'Canada': 'ca'
+                };
+                const REGION_CODE = COUNTRY_CODE_MAP[COUNTRY_SETTING] || 'us';
 
                 const mapEl = document.getElementById("map");
                 const pacMount = document.getElementById("pacContainer");
@@ -1289,6 +634,9 @@ ob_start();
                     window.updateLocationViaAjax?.(e.latLng.lat(), e.latLng.lng(), BUSINESS_NAME);
                 });
 
+
+
+                
                 // ---- Get Place Autocomplete Element reference ----
                 const pac = document.getElementById('pac');
                 if (!pac) {
@@ -1304,10 +652,14 @@ ob_start();
                 const inputEl = pac.querySelector("#pacInput");
                 const geocoder = new google.maps.Geocoder();
 
+                // Set region restriction based on dashboard country setting
+                pac.includedRegionCodes = [REGION_CODE];
+        
                 // Add event listener for place selection using modern Places API
                 pac.addEventListener('gmp-select', async ({ placePrediction }) => {
 
                     const place = placePrediction.toPlace();
+                    
                     await place.fetchFields({
                         fields: ['displayName', 'formattedAddress', 'location', 'viewport']
                     });
@@ -1331,7 +683,7 @@ ob_start();
                         console.error('[places] No location data in place result');
                     }
                 });
-
+                
                 // Using modern Places API with gmp-select event, no alternative needed
 
                 // helpers
@@ -1668,7 +1020,9 @@ ob_start();
 
                         </div>
 
-
+                        <!-- END .financial-form.section -->
+                    
+        
                         <!-- Solar Investment Analysis -->
                         <div class="solar-investment-analysis section" id="solar-investment-analysis">
                             <div class="row pdf-page">
@@ -1679,7 +1033,7 @@ ob_start();
                                     <?php $ksrad_maxPanels = $ksrad_solarData['solarPotential']['maxArrayPanelsCount']; ?>
                                     <div class="d-flex justify-content-between align-items-baseline mb-2">
                                         <label for="panelCount" class="form-label mb-0">Panels: <span
-                                                id="panelCountValue">4</span></label>
+                                                id="panelCountValue">0</span></label>
                                         <div class="system-size">
                                             <?php
                                             // Server-side default for compact installCost (mirror logic used later)
@@ -1711,10 +1065,10 @@ ob_start();
                                         </div>
                                     </div>
                                     <div class="slider-container">
-                                        <input type="range" class="form-range custom-slider" id="panelCount" min="4"
-                                            max="<?php echo esc_attr($ksrad_maxPanels); ?>" value="4" step="1" required>
+                                        <input type="range" class="form-range custom-slider" id="panelCount" min="0"
+                                            max="<?php echo esc_attr($ksrad_maxPanels); ?>" value="0" step="1" required>
                                         <div class="slider-labels">
-                                            <span>4</span>
+                                            <span>0</span>
                                             <span><?php echo esc_html($ksrad_maxPanels); ?></span>
                                         </div>
                                     </div>
@@ -1942,7 +1296,7 @@ ob_start();
                                     <div class="install-details-cell">
                                         <label for="panelCount" class="form-label-left">Number of Panels</label>
                                         <div class="energy-display-left"><span id="panelCount"
-                                                class="highlighted-value">4</span></div>
+                                                class="highlighted-value">0</span></div>
                                         <div class="input-help-left">Total solar panels to be installed</div>
                                     </div>
                                     <div class="install-details-cell install-details-border">
@@ -2160,15 +1514,13 @@ ob_start();
                                 const SEAI_GRANT_CAP = <?php echo esc_js(ksrad_get_option('seai_grant_cap', '162000')); ?>;
                                 const ACA_RATE = <?php echo esc_js(ksrad_get_option('aca_rate', '12.5') / 100); ?>;
 
-                                function getPanelCount() {
-                                    const range = document.querySelector('input[type="range"]#panelCount');
-                                    if (range) return parseInt(range.value, 10) || 4;
-                                    const disp = document.getElementById('panelCountValue') || document.getElementById('panelCountDisplay');
-                                    if (disp) return parseInt(disp.textContent.trim(), 10) || 4;
-                                    return 4;
-                                }
-
-                                function fmt(v, d = 0) {
+                function getPanelCount() {
+                    const range = document.querySelector('input[type="range"]#panelCount');
+                    if (range) return parseInt(range.value, 10) || 0;
+                    const disp = document.getElementById('panelCountValue') || document.getElementById('panelCountDisplay');
+                    if (disp) return parseInt(disp.textContent.trim(), 10) || 0;
+                    return 0;
+                }                                function fmt(v, d = 0) {
                                     return (typeof formatCurrency === 'function') ? formatCurrency(v, d) : (CURRENCY_SYMBOL + Number(v).toLocaleString());
                                 }
 
@@ -2728,7 +2080,7 @@ ob_start();
             window.updateEnergyChart = function () {
                 try {
                     if (!window.energyChart) return;
-                    const panelCount = parseInt(document.getElementById('panelCount')?.value || 4);
+                    const panelCount = parseInt(document.getElementById('panelCount')?.value || 0);
                     const yearlyEnergy = estimateEnergyProduction(panelCount);
                     const degradation = parseFloat(document.getElementById('degradation')?.value) / 100 || 0.005; // default 0.5% -> 0.005
                     const years = Array.from({ length: 25 }, (_, i) => i);
@@ -2791,7 +2143,7 @@ ob_start();
             const DAY_POWER_AVG = 1.85;           // kWh/day per 400W panel on average in Ireland
 
             // UI defaults
-            const DEFAULT_PANELS = 4;
+            const DEFAULT_PANELS = 0;
             const DEFAULT_EXPORT_PERCENT = 0.4;   // 40% of production exported (assumption if no slider)
             const DEFAULT_RETAIL_RATE = 0.35;     // €/kWh – sensible default if blank
             const DEFAULT_FEED_IN_TARIFF = FEED_IN_TARIFF_DEFAULT;
@@ -2890,7 +2242,7 @@ ob_start();
                 const inclLoan = !!(byId('inclLoan')?.checked);
 
                 const panelCountEl = byId('panelCount');
-                const panels = panelCountEl ? clamp(num(panelCountEl.value), 1, 10000) : DEFAULT_PANELS;
+                const panels = panelCountEl ? clamp(num(panelCountEl.value), 0, 10000) : DEFAULT_PANELS;
 
                 // key text inputs
                 const exportRate = (() => {
@@ -3316,9 +2668,6 @@ ob_start();
 
             // ========= 8) INITIALISE =========
             function initialPopulate() {
-                // Set defaults
-                if (byId('panelCount') && !byId('panelCount').value) byId('panelCount').value = DEFAULT_PANELS;
-                
                 // Explicitly set all ROI values to zero on page load
                 const setZero = (id, txt) => {
                     const el = byId(id);
