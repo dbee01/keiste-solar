@@ -261,7 +261,7 @@
         setTxt('installationCost', fmtEuro(figs.install_cost));
         setTxt('grant', fmtEuro(figs.seaiGrant));
         setTxt('panelCount', fmtNum(state.panels, 0));
-        setTxt('yearlyEnergy', fmtNum(figs.yearlyEnergyKWh, 0) + ' kWh');
+        setTxt('yearlyEnergyValue', fmtNum(figs.yearlyEnergyKWh, 0));
         setTxt('monthlyBill', fmtEuro(state.billMonthly));
         setTxt('annualIncrease', (ANNUAL_INCREASE * 100).toFixed(1));
 

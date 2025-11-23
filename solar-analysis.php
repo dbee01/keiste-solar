@@ -24,7 +24,7 @@ if (!defined('WPINC')) {
 
 // Define plugin constants (only once) with ksrad_ namespace
 if (!defined('KSRAD_VERSION')) {
-    define('KSRAD_VERSION', '1.0.6');
+    define('KSRAD_VERSION', '1.0.7');
 }
 if (!defined('KSRAD_PLUGIN_DIR')) {
     define('KSRAD_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -1040,7 +1040,7 @@ ob_start();
                                             $ksrad_header_four_panel_yearly = null;
                                             if (isset($ksrad_solarData['solarPotential']['solarPanelConfigs'])) {
                                                 foreach ($ksrad_solarData['solarPotential']['solarPanelConfigs'] as $ksrad_c) {
-                                                    if (!empty($ksrad_c['panelsCount']) && $ksrad_c['panelsCount'] == 0) {
+                                                    if (!empty($ksrad_c['panelsCount']) && $ksrad_c['panelsCount'] == 4) {
                                                         $ksrad_header_four_panel_yearly = $ksrad_c['yearlyEnergyDcKwh'];
                                                         break;
                                                     }
@@ -1267,7 +1267,7 @@ ob_start();
                                         <label for="grant" class="form-label-right">Available Grant (<?php echo esc_html(ksrad_get_option('currency', '€')); ?>)</label>
                                         <div class="energy-display-right"><span id="grant"
                                                 class="highlighted-value">0</span></div>
-                                        <div class="input-help-right">30% of installation cost (max €162,000)</div>
+                                        <div class="input-help-right"><?php echo esc_html(ksrad_get_option('seai_grant_rate', '%')); ?>% Grant (max <?php echo esc_html(ksrad_get_option('seai_grant_cap', '€')); ?>)</div>
                                     </div>
                                 </div>
                                 <div class="install-details-row">

@@ -117,11 +117,18 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(42, 157, 143, 0.25);
 }
 
-.input-help-left,
+.input-help-left {
+    font-size: var(--font-size-sm);
+    color: var(--text-light);
+    margin-top: var(--spacing-xs);
+    text-align: right;
+}
+
 .input-help-right {
     font-size: var(--font-size-sm);
     color: var(--text-light);
     margin-top: var(--spacing-xs);
+    text-align: left;
 }
 
 /* Energy display boxes */
@@ -408,6 +415,7 @@ input[type="range"]::-moz-range-thumb {
     input[type="number"] {
         -webkit-appearance: none;
         padding-left: unset !important;  
+        text-align: center !important;
     }
 
     .install-details-border {
