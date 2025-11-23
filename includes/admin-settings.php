@@ -453,10 +453,10 @@ class KSRAD_Admin {
     }
     
     public function logo_url_callback() {
-        $logo_url = isset($this->options['logo_url']) ? esc_attr($this->options['logo_url']) : '';
+        $logo_url = isset($this->options['logo_url']) ? esc_url($this->options['logo_url']) : '';
         ?>
         <div class="logo-upload-wrapper">
-            <input type="text" id="logo_url" name="ksrad_options[logo_url]" value="<?php echo $logo_url; ?>" class="regular-text" readonly />
+            <input type="text" id="logo_url" name="ksrad_options[logo_url]" value="<?php echo esc_attr($logo_url); ?>" class="regular-text" readonly />
             <button type="button" class="button upload-logo-button">Upload Logo</button>
             <button type="button" class="button remove-logo-button" style="<?php echo empty($logo_url) ? 'display:none;' : ''; ?>">Remove</button>
             <div class="logo-preview" style="margin-top: 10px;">
