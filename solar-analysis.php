@@ -460,7 +460,7 @@ ob_start();
             $ksrad_logo_url = ksrad_get_option('logo_url', '');
             if (empty($ksrad_logo_url)) {
                 // Fallback to default plugin logo if no custom logo uploaded
-                $ksrad_logo_url = esc_url(KSRAD_PLUGIN_URL . 'assets/images/keiste-logo.png');
+                $ksrad_logo_url = KSRAD_PLUGIN_URL . 'assets/images/keiste-logo.png';
             }
             ?>
             <a href="https://keiste.com/">
