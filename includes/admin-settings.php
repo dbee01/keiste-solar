@@ -61,7 +61,7 @@ class KSRAD_Admin {
      * Add settings link on plugins page
      */
     public function add_settings_link($links) {
-        $settings_link = '<a href="' . admin_url('admin.php?page=keiste-solar') . '">' . __('Settings', 'keiste-solar-report') . '</a>';
+        $settings_link = '<a href="' . admin_url('admin.php?page=keiste-solar') . '">' . __('Settings', 'keiste-solar') . '</a>';
         array_unshift($links, $settings_link);
         return $links;
     }
