@@ -431,7 +431,7 @@ ob_start();
 
         #netIncome {
             width: 200px;
-            text-align: left;
+            text-align: center;
             font-size: 2rem !important;
         }
 
