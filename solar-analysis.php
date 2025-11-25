@@ -24,7 +24,7 @@ if (!defined('WPINC')) {
 
 // Define plugin constants (only once) with ksrad_ namespace
 if (!defined('KSRAD_VERSION')) {
-    define('KSRAD_VERSION', '1.0.7');
+    define('KSRAD_VERSION', '1.0.8');
 }
 if (!defined('KSRAD_PLUGIN_DIR')) {
     define('KSRAD_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -73,7 +73,7 @@ if (!function_exists('ksrad_fetch_solar_data')) {
     $params = http_build_query([
         'location.latitude' => $lat,
         'location.longitude' => $lng,
-        'requiredQuality' => 'HIGH',
+        'requiredQuality' => 'MEDIUM',
         'key' => $apiKey
     ]);
 
@@ -322,136 +322,7 @@ ob_start();
                 <button value="submit" id="roiSubmitBtn" class="roi-btn roi-btn-submit">Download</button>
             </menu>
         </form>
-        <style>
-            .roi-modal-form {
-                display: flex;
-                flex-direction: column;
-                gap: 1.1rem;
-                padding: 0.5rem 0.5rem 0.5rem 0.5rem;
-                min-width: 270px;
-                max-width: 350px;
-                margin: 0 auto;
-            }
-
-            .roi-modal-title {
-                text-align: center;
-                color: var(--primary-green, #2a9d8f);
-                font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-                font-weight: 700;
-                font-size: 1.25rem;
-                margin-bottom: 0.5rem;
-            }
-
-            .roi-form-group {
-                display: flex;
-                flex-direction: column;
-                gap: 0.3rem;
-            }
-
-            .roi-input {
-                border-radius: 8px;
-                border: 1px solid var(--primary-green, #2a9d8f);
-                padding: 0.5rem 0.75rem;
-                font-size: 1rem;
-                font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-                background: #f5fafd;
-                color: #222;
-                transition: border 0.2s;
-            }
-
-            .roi-input:focus {
-                border-color: var(--accent-yellow, #ffd600);
-                outline: none;
-                background: #fff;
-            }
-
-            .required {
-                color: var(--primary-green, #2a9d8f);
-                font-weight: 700;
-                margin-left: 0.2em;
-            }
-
-            .optional {
-                color: #888;
-                font-size: 0.95em;
-                font-weight: 400;
-            }
-
-            .roi-gdpr-group {
-                flex-direction: row;
-                align-items: center;
-                gap: 0.5rem;
-                margin-top: 0.2rem;
-            }
-
-            .roi-gdpr-label {
-                font-size: 0.98em;
-                color: var(--dark-blue, #264653);
-                font-weight: 500;
-                margin: 0;
-            }
-
-            .roi-gdpr-label a {
-                color: var(--primary-green, #2a9d8f);
-                text-decoration: underline;
-            }
-
-            .roi-gdpr-label a:hover {
-                color: var(--accent-yellow, #ffd600);
-            }
-
-            .roi-disclaimer {
-                margin-top: 0.2rem;
-                text-align: left;
-            }
-
-            .roi-disclaimer-text {
-                font-size: 0.93em;
-                color: #888;
-                font-style: italic;
-            }
-
-            .roi-modal-menu {
-                display: flex;
-                flex-direction: row;
-                justify-content: flex-end;
-                gap: 0.7rem;
-                margin-top: 0.5rem;
-            }
-
-            .roi-btn {
-                border-radius: 8px;
-                border: none;
-                padding: 0.5rem 1.2rem;
-                font-size: 1rem;
-                font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
-                font-weight: 600;
-                cursor: pointer;
-                transition: background 0.2s, color 0.2s;
-            }
-
-            .roi-btn-cancel {
-                background: #eee;
-                color: #222;
-            }
-
-            .roi-btn-cancel:hover {
-                background: #ddd;
-            }
-
-            .roi-btn-submit {
-                background: var(--primary-green, #2a9d8f);
-                color: #fff;
-            }
-
-            .roi-btn-submit:hover {
-                background: var(--accent-yellow, #ffd600);
-                color: var(--dark-blue, #264653);
-            }
-        </style>
     </dialog>
-
-
 
     <div class="container">
 
@@ -953,18 +824,35 @@ ob_start();
                                                 document.body.classList.remove('modal-open');
                                             }
 
-                                            // Only show modal if cookie not set
+                                            // Download Report button - attach listener when DOM is ready
+                                            function attachDownloadButtonListener() {
+                                                const roiBtnEl = document.getElementById('roiBtn');
+                                                if (roiBtnEl) {
+                                                    roiBtnEl.addEventListener('click', function (e) {
+                                                        e.preventDefault();
+                                                        console.log('Download button clicked, showing modal...');
+                                                        showModal();
+                                                    });
+                                                    console.log('Download button listener attached');
+                                                } else {
+                                                    console.error('roiBtn element not found');
+                                                }
+                                            }
+
+                                            // Try to attach immediately if button exists
                                             if (roiBtn) {
                                                 roiBtn.addEventListener('click', function (e) {
                                                     e.preventDefault();
-                                                    if (getCookie('roiUserSubmitted')) {
-                                                        // Already submitted, just calculate
-                                                        if (window.solarForm) window.solarForm.requestSubmit();
-                                                        if (resultsSection) resultsSection.style.display = 'block';
-                                                    } else {
-                                                        showModal();
-                                                    }
+                                                    showModal();
                                                 });
+                                            } else {
+                                                // Wait for DOM to be ready and try again
+                                                if (document.readyState === 'loading') {
+                                                    document.addEventListener('DOMContentLoaded', attachDownloadButtonListener);
+                                                } else {
+                                                    // DOM already loaded, attach now
+                                                    setTimeout(attachDownloadButtonListener, 100);
+                                                }
                                             }
 
                                             // Handle form submission
@@ -976,11 +864,56 @@ ob_start();
                                                         roiForm.reportValidity();
                                                         return;
                                                     }
+                                                    
+                                                    // Get form data
+                                                    const formData = {
+                                                        fullName: document.getElementById('roiFullName')?.value || '',
+                                                        email: document.getElementById('roiEmail')?.value || '',
+                                                        phone: document.getElementById('roiPhone')?.value || ''
+                                                    };
+                                                    
                                                     // Set cookie to avoid showing again
                                                     setCookie('roiUserSubmitted', '1', 1); // 1 day
                                                     // Only hide the modal, not any parent containers
                                                     if (typeof hideModal === 'function') hideModal();
-                                                    // Directly trigger calculation logic instead of submitting solarForm
+                                                    
+                                                    // Show loading state
+                                                    console.log('Generating PDF report...');
+                                                    
+                                                    // Call Gamma API to generate PDF
+                                                    fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+                                                        method: 'POST',
+                                                        headers: {
+                                                            'Content-Type': 'application/x-www-form-urlencoded',
+                                                        },
+                                                        body: new URLSearchParams({
+                                                            action: 'ksrad_generate_gamma_pdf',
+                                                            nonce: '<?php echo wp_create_nonce('ksrad_gamma_pdf'); ?>',
+                                                            fullName: formData.fullName,
+                                                            email: formData.email,
+                                                            phone: formData.phone,
+                                                            // Include solar data from current calculation
+                                                            panelCount: getPanelCount ? getPanelCount() : 0,
+                                                            location: '<?php echo esc_js($ksrad_business_name ?? ''); ?>'
+                                                        })
+                                                    })
+                                                    .then(response => response.json())
+                                                    .then(data => {
+                                                        if (data.success) {
+                                                            console.log('PDF generated successfully:', data.data);
+                                                            // You can add UI notification here
+                                                            alert('Your solar report has been generated and sent to ' + formData.email);
+                                                        } else {
+                                                            console.error('PDF generation failed:', data.data);
+                                                            alert('Error generating report: ' + (data.data || 'Unknown error'));
+                                                        }
+                                                    })
+                                                    .catch(error => {
+                                                        console.error('Error calling Gamma API:', error);
+                                                        alert('Error generating report. Please try again.');
+                                                    });
+                                                    
+                                                    // Directly trigger calculation logic
                                                     if (typeof calculateROI === 'function') {
                                                         calculateROI();
                                                     } else if (window.solarForm) {
@@ -1144,7 +1077,6 @@ ob_start();
                                             display: block;
                                             text-transform: uppercase;
                                             text-decoration: none;
-                                            display: none;
                                         }
 
                                         .slider-labels {
@@ -1196,8 +1128,8 @@ ob_start();
                                                     (<?php echo esc_html(ksrad_get_option('currency', '€')); ?>)</label>
                                             </div>
                                             <input type="number" min="0" class="form-control"
-                                                style="margin-right: unset;display: inline-block;text-align: right;width: 100px;"
-                                                id="electricityBill" maxlength="7" placeholder="0" required>
+                                                style="margin-right: unset;display: inline-block;text-align: right;"
+                                                id="electricityBill" maxlength="12" placeholder="0" required>
                                         </div>
 
                                         <div class="col-md-6 mb-3 align-center grant-box" style="padding-left: 2rem;">
@@ -1216,11 +1148,21 @@ ob_start();
                                                         (%)</I></label>
                                             </div>
                                         </div>
+
+                                        <div class="mb-4 mt-4">
+                                            <div class="row">
+                                                <h6 class="col-md-12 mb-3 text-center" style="font-size: xx-small;" >
+                                                    calculations include one solar battery and use 400W panels. 
+                                                </h6>
+                                            </div>
+                                        </div>
+
+
                                     </div>
                                 </div>
 
-                                <!-- Hidden download button (triggered via JS after calculation) -->            
-                                <div style="display: none;" >
+                                     <!-- Download button (triggered via JS after calculation) -->            
+                                <div class="text-center mt-4">
                                     <button id="roiBtn" type="button" class="btn btn-primary" style="display: none;">DOWNLOAD<br>REPORT</button>
                                 </div>
 
@@ -2231,10 +2173,16 @@ ob_start();
                     const val = byId('electricityBill')?.value;
                     // Ensure we never treat a negative input as a negative bill - clamp to 0
                     const r = Math.max(0, num(val));
-                    const roiBtnEl = document.getElementById('roiBtn');
-                    if (roiBtnEl) roiBtnEl.style.display = r > 0 ? 'block' : 'none';
                     return r;
                 })();
+                
+                // Show Download Report button only if both bill > 0 AND panels > 0
+                const roiBtnEl = document.getElementById('roiBtn');
+                if (roiBtnEl) {
+                    const shouldShow = billMonthly > 0 && panels > 0;
+                    console.log('[ROI Button] billMonthly:', billMonthly, 'panels:', panels, 'shouldShow:', shouldShow);
+                    roiBtnEl.style.setProperty('display', shouldShow ? 'block' : 'none', 'important');
+                }
 
                 // add an energy production estimate based on panels and available solar configs
                 let yearlyEnergy = 0;
@@ -2669,4 +2617,102 @@ ob_start();
 <?php
 // Output the buffered content
 ob_end_flush();
+
+// AJAX Handler for Gamma PDF Generation
+if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
+    add_action('wp_ajax_ksrad_generate_gamma_pdf', 'ksrad_handle_gamma_pdf_generation');
+    add_action('wp_ajax_nopriv_ksrad_generate_gamma_pdf', 'ksrad_handle_gamma_pdf_generation');
+
+    function ksrad_handle_gamma_pdf_generation() {
+    // Verify nonce
+    check_ajax_referer('ksrad_gamma_pdf', 'nonce');
+    
+    // Get form data
+    $full_name = sanitize_text_field($_POST['fullName'] ?? '');
+    $email = sanitize_email($_POST['email'] ?? '');
+    $phone = sanitize_text_field($_POST['phone'] ?? '');
+    $panel_count = intval($_POST['panelCount'] ?? 0);
+    $location = sanitize_text_field($_POST['location'] ?? '');
+    
+    // Get API key from settings
+    $gamma_api_key = ksrad_get_option('gamma_api_key', '');
+    $gamma_template_id = ksrad_get_option('gamma_template_id', 'g_6h8kwcjnyzhxn9f');
+    // gamma folder id is needed 
+    $gamma_folder_id = ksrad_get_option('gamma_folder_id', '7mknfm68zejkpsf');
+
+    if (empty($gamma_api_key) || empty($gamma_template_id)) {
+        wp_send_json_error('Gamma API key or template ID not configured');
+        return;
+    }
+    
+    // Prepare prompt with solar data
+    // add all solar_data
+    $ksrad_solarData = ksrad_get_option('', ksrad_get_default_solar_data());
+    $solar_data_json = json_encode($ksrad_solarData);    
+
+    // add $solar_data_json values to this prompt
+    $prompt = sprintf( 
+        "Generate a solar report for %s at %s. System includes %d solar panels. Contact: %s, Phone: %s, Solar Data: %s",
+        $full_name,
+        $location,
+        $panel_count,
+        $email,
+        $phone,
+        $solar_data_json
+    );
+    
+    // Call Gamma API
+    $response = wp_remote_post('https://public-api.gamma.app/v1.0/generations/from-template', array(
+        'headers' => array(
+            'Content-Type' => 'application/json',
+            'X-API-KEY' => $gamma_api_key
+        ),
+        'body' => wp_json_encode(array(
+            'gammaId' => $gamma_template_id,
+            'prompt' => $prompt,
+            'themeId' => 'Chisel',
+            'exportAs' => 'pdf',
+            'imageOptions' => array(
+                'model' => 'imagen-4-pro',
+                'style' => 'photorealistic'
+            ),
+            'sharingOptions' => array(
+                'workspaceAccess' => 'view',
+                'externalAccess' => 'noAccess',
+                'emailOptions' => array(
+                    'recipients' => array($email),
+                    'access' => 'comment'
+                )
+            )
+        )),
+        'timeout' => 30
+    ));
+    
+    if (is_wp_error($response)) {
+        wp_send_json_error($response->get_error_message());
+        return;
+    }
+    
+    $body = wp_remote_retrieve_body($response);
+    $data = json_decode($body, true);
+    
+    if (wp_remote_retrieve_response_code($response) !== 200) {
+        wp_send_json_error($data['message'] ?? 'Unknown error from Gamma API');
+        return;
+    }
+    
+    // Log the generation (optional)
+    error_log(sprintf(
+        'Gamma PDF generated for %s (%s) - Panel count: %d',
+        $full_name,
+        $email,
+        $panel_count
+    ));
+    
+    wp_send_json_success(array(
+        'message' => 'PDF generated successfully',
+        'gamma_response' => $data
+    ));
+    }
+}
 ?>

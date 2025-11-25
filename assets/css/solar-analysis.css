@@ -91,10 +91,133 @@ body {
     page-break-after: always;
 }
 
-.nopdf {
-    /* Hidden in PDF generation */
+/* ===== Heading Styles ===== */
+.roi-modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 0.5rem 0.5rem 0.5rem 0.5rem;
+    min-width: 270px;
+    max-width: 350px;
+    margin: 0 auto;
 }
 
+.roi-modal-title {
+    text-align: center;
+    color: var(--primary-green, #2a9d8f);
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.roi-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.roi-input {
+    border-radius: 8px;
+    border: 1px solid var(--primary-green, #2a9d8f);
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    background: #f5fafd;
+    color: #222;
+    transition: border 0.2s;
+}
+
+.roi-input:focus {
+    border-color: var(--accent-yellow, #ffd600);
+    outline: none;
+    background: #fff;
+}
+
+.required {
+    color: var(--primary-green, #2a9d8f);
+    font-weight: 700;
+    margin-left: 0.2em;
+}
+
+.optional {
+    color: #888;
+    font-size: 0.95em;
+    font-weight: 400;
+}
+
+.roi-gdpr-group {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.2rem;
+}
+
+.roi-gdpr-label {
+    font-size: 0.98em;
+    color: var(--dark-blue, #264653);
+    font-weight: 500;
+    margin: 0;
+}
+
+.roi-gdpr-label a {
+    color: var(--primary-green, #2a9d8f);
+    text-decoration: underline;
+}
+
+.roi-gdpr-label a:hover {
+    color: var(--accent-yellow, #ffd600);
+}
+
+.roi-disclaimer {
+    margin-top: 0.2rem;
+    text-align: left;
+}
+
+.roi-disclaimer-text {
+    font-size: 0.93em;
+    color: #888;
+    font-style: italic;
+}
+
+.roi-modal-menu {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 0.7rem;
+    margin-top: 0.5rem;
+}
+
+.roi-btn {
+    border-radius: 8px;
+    border: none;
+    padding: 0.5rem 1.2rem;
+    font-size: 1rem;
+    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.roi-btn-cancel {
+    background: #eee;
+    color: #222;
+}
+
+.roi-btn-cancel:hover {
+    background: #ddd;
+}
+
+.roi-btn-submit {
+    background: var(--primary-green, #2a9d8f);
+    color: #fff;
+}
+
+.roi-btn-submit:hover {
+    background: var(--accent-yellow, #ffd600);
+    color: var(--dark-blue, #264653);
+}
+        
 /* ===== Form Styles ===== */
 .form-label-left,
 .form-label-right {
