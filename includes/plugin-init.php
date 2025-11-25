@@ -25,6 +25,10 @@ class KSRAD_Plugin {
         // Enqueue scripts and styles
         add_action('wp_enqueue_scripts', array($this, 'enqueue_assets'));
         
+        // Register AJAX handlers
+        add_action('wp_ajax_ksrad_generate_gamma_pdf', array($this, 'handle_gamma_pdf_generation'));
+        add_action('wp_ajax_nopriv_ksrad_generate_gamma_pdf', array($this, 'handle_gamma_pdf_generation'));
+        
         // Add activation/deactivation hooks
         register_activation_hook(KSRAD_PLUGIN_BASENAME, array($this, 'activate'));
         register_deactivation_hook(KSRAD_PLUGIN_BASENAME, array($this, 'deactivate'));
@@ -214,6 +218,87 @@ class KSRAD_Plugin {
     public function deactivate() {
         // Flush rewrite rules
         flush_rewrite_rules();
+    }
+    
+    /**
+     * Handle Gamma PDF Generation AJAX Request
+     */
+    public function handle_gamma_pdf_generation() {
+        error_log('=== GAMMA PDF GENERATION FUNCTION CALLED ===');
+        
+        // Verify nonce
+        $nonce_valid = check_ajax_referer('ksrad_gamma_pdf', 'nonce', false);
+        if (!$nonce_valid) {
+            error_log('NONCE VERIFICATION FAILED');
+            wp_send_json_error(array('message' => 'Security check failed'));
+            return;
+        }
+        
+        // Get form data
+        $full_name = sanitize_text_field($_POST['fullName'] ?? '');
+        $email = sanitize_email($_POST['email'] ?? '');
+        $phone = sanitize_text_field($_POST['phone'] ?? '');
+        $panel_count = intval($_POST['panelCount'] ?? 0);
+        $location = sanitize_text_field($_POST['location'] ?? '');
+        
+        // Get API credentials
+        $gamma_api_key = ksrad_get_option('gamma_api_key', 'sk-gamma-9KmJzFjq38EdudoBOD0L0Ospjrj9Q4xUeaaaON5I');
+        $gamma_template_id = ksrad_get_option('gamma_template_id', 'g_6h8kwcjnyzhxn9f');
+        
+        if (empty($gamma_api_key) || empty($gamma_template_id)) {
+            wp_send_json_error('API not configured');
+            return;
+        }
+        
+        // Build prompt
+        $prompt = sprintf(
+            "Generate a professional solar report for %s at %s.\n\nSystem Details:\n- %d x 400W solar panels\n- Annual production: 7500 kWh\n- Contact: %s\n- Phone: %s",
+            $full_name, $location, $panel_count, $email, $phone
+        );
+        
+        // Prepare request
+        $request_body = array(
+            'gammaId' => $gamma_template_id,
+            'prompt' => $prompt,
+            'themeId' => 'default-light',
+            'exportAs' => 'pdf',
+            'imageOptions' => array('model' => 'imagen-4-pro', 'style' => 'Line Art'),
+            'sharingOptions' => array(
+                'workspaceAccess' => 'view',
+                'externalAccess' => 'noAccess',
+                'emailOptions' => array('recipients' => array($email), 'access' => 'comment')
+            )
+        );
+        
+        $json_body = json_encode($request_body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        
+        // Call API
+        $response = wp_remote_post('https://public-api.gamma.app/v1.0/generations/from-template', array(
+            'headers' => array('Content-Type' => 'application/json', 'X-API-KEY' => $gamma_api_key),
+            'body' => $json_body,
+            'timeout' => 30
+        ));
+        
+        if (is_wp_error($response)) {
+            wp_send_json_error($response->get_error_message());
+            return;
+        }
+        
+        $response_code = wp_remote_retrieve_response_code($response);
+        $body = wp_remote_retrieve_body($response);
+        
+        // 200 OK and 201 Created are both success codes
+        if ($response_code !== 200 && $response_code !== 201) {
+            wp_send_json_error(array('message' => 'API Error: ' . $response_code, 'body' => $body));
+            return;
+        }
+        
+        $result = json_decode($body, true);
+        wp_send_json_success(array(
+            'message' => 'PDF generation started successfully',
+            'generation_id' => $result['generationId'] ?? null,
+            'response' => $result
+        ));
     }
 }
 

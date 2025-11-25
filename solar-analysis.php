@@ -872,12 +872,12 @@ ob_start();
                                                         phone: document.getElementById('roiPhone')?.value || ''
                                                     };
                                                     
-                                                    // Set cookie to avoid showing again
-                                                    setCookie('roiUserSubmitted', '1', 1); // 1 day
-                                                    // Only hide the modal, not any parent containers
-                                                    if (typeof hideModal === 'function') hideModal();
+                                                    // Show loading state in the form (keep modal open)
+                                                    const formEl = document.getElementById('roiForm');
+                                                    if (formEl) {
+                                                        formEl.innerHTML = '<div style="padding: 2rem; text-align: center;"><div style="border: 4px solid #f3f3f3; border-top: 4px solid #1B4D3E; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div><p style="color: #1B4D3E; font-weight: 600;">Generating your report...</p></div>';
+                                                    }
                                                     
-                                                    // Show loading state
                                                     console.log('Generating PDF report...');
                                                     
                                                     // Call Gamma API to generate PDF
@@ -897,20 +897,109 @@ ob_start();
                                                             location: '<?php echo esc_js($ksrad_business_name ?? ''); ?>'
                                                         })
                                                     })
-                                                    .then(response => response.json())
-                                                    .then(data => {
+                                                    .then(response => {
+                                                        console.log('=== AJAX RESPONSE ===');
+                                                        console.log('Response status:', response.status);
+                                                        console.log('Response ok:', response.ok);
+                                                        
+                                                        // Parse JSON even on error to get error details
+                                                        return response.json().then(data => {
+                                                            console.log('Parsed JSON data:', data);
+                                                            return { response, data };
+                                                        }).catch(jsonError => {
+                                                            console.error('Failed to parse JSON response:', jsonError);
+                                                            throw new Error('Invalid JSON response from server');
+                                                        });
+                                                    })
+                                                    .then(({ response, data }) => {
+                                                        console.log('=== PROCESSING RESPONSE ===');
+                                                        console.log('Full response data:', data);
+                                                        console.log('data.success:', data.success);
+                                                        console.log('data.data:', data.data);
+                                                        console.log('data.curl_command exists?:', !!data.curl_command);
+                                                        console.log('data keys:', Object.keys(data));
+                                                        
+                                                        // ALWAYS LOG CURL COMMAND IF AVAILABLE
+                                                        if (data.curl_command) {
+                                                            console.log('%c=== COPY THIS CURL COMMAND TO TEST ===', 'background: #222; color: #bada55; font-size: 16px; font-weight: bold; padding: 10px;');
+                                                            console.log(data.curl_command);
+                                                            console.log('%c=== END CURL COMMAND ===', 'background: #222; color: #bada55; font-size: 16px; font-weight: bold; padding: 10px;');
+                                                        }
+                                                        
+                                                        // Log the Gamma API call details if available
+                                                        if (data.debug) {
+                                                            console.log('=== GAMMA API CALL DETAILS ===');
+                                                            console.log('URL:', data.debug.url);
+                                                            console.log('Method:', data.debug.method);
+                                                            console.log('Headers:', data.debug.headers);
+                                                            console.log('Body:', data.debug.body);
+                                                            console.log('=== END GAMMA API CALL ===');
+                                                        }
+                                                        
+                                                        // Log debug info on error
+                                                        if (data.data && data.data.debug) {
+                                                            console.log('=== GAMMA API CALL DETAILS (FROM data.data.debug) ===');
+                                                            console.log('URL:', data.data.debug.url);
+                                                            console.log('Method:', data.data.debug.method);
+                                                            console.log('Headers:', data.data.debug.headers);
+                                                            console.log('Request Body:', JSON.stringify(data.data.debug.body, null, 2));
+                                                            console.log('Response Code:', data.data.debug.response_code);
+                                                            console.log('Response Body:', data.data.debug.response_body);
+                                                            console.log('=== END GAMMA API CALL ===');
+                                                        }
+                                                        
                                                         if (data.success) {
-                                                            console.log('PDF generated successfully:', data.data);
-                                                            // You can add UI notification here
-                                                            alert('Your solar report has been generated and sent to ' + formData.email);
+                                                            console.log('✅ PDF generated successfully:', data.data);
+                                                            
+                                                            // Update form with success message
+                                                            const formEl = document.getElementById('roiForm');
+                                                            if (formEl) {
+                                                                formEl.innerHTML = '<div style="padding: 2rem; text-align: center; color: #28a745; font-size: 1.2rem; font-weight: 600;"><i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i><br>SUCCESS: Check your inbox in 10 to 15 mins for your report</div>';
+                                                            }
                                                         } else {
-                                                            console.error('PDF generation failed:', data.data);
-                                                            alert('Error generating report: ' + (data.data || 'Unknown error'));
+                                                            console.error('❌ PDF generation failed');
+                                                            console.error('data.success:', data.success);
+                                                            console.error('data.data type:', typeof data.data);
+                                                            console.error('data.data value:', data.data);
+                                                            console.error('data.message:', data.message);
+                                                            console.error('Full data object:', JSON.stringify(data, null, 2));
+                                                            
+                                                            // Log curl command if available
+                                                            if (data.curl_command) {
+                                                                console.log('=== CURL COMMAND TO TEST ===');
+                                                                console.log(data.curl_command);
+                                                                console.log('=== END CURL COMMAND ===');
+                                                            }
+                                                            
+                                                            let errorMsg = 'Unknown error occurred';
+                                                            
+                                                            if (typeof data.data === 'string' && data.data) {
+                                                                errorMsg = data.data;
+                                                            } else if (data.data && typeof data.data === 'object') {
+                                                                errorMsg = data.data.message || data.data.error || JSON.stringify(data.data);
+                                                            } else if (data.message) {
+                                                                errorMsg = data.message;
+                                                            }
+                                                            
+                                                            console.error('Final error message:', errorMsg);
+                                                            
+                                                            // Update form with error message
+                                                            const formEl = document.getElementById('roiForm');
+                                                            if (formEl) {
+                                                                formEl.innerHTML = '<div style="padding: 2rem; text-align: center; color: #dc3545; font-size: 1.2rem; font-weight: 600;"><i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i><br>ERROR: Contact the admin<br><small style="font-size: 0.8rem; margin-top: 1rem; display: block;">' + errorMsg + '</small></div>';
+                                                            }
                                                         }
                                                     })
                                                     .catch(error => {
-                                                        console.error('Error calling Gamma API:', error);
-                                                        alert('Error generating report. Please try again.');
+                                                        console.error('❌ CATCH BLOCK: Error in fetch chain:', error);
+                                                        console.error('Error message:', error.message);
+                                                        console.error('Error stack:', error.stack);
+                                                        
+                                                        // Update form with error message
+                                                        const formEl = document.getElementById('roiForm');
+                                                        if (formEl) {
+                                                            formEl.innerHTML = '<div style="padding: 2rem; text-align: center; color: #dc3545; font-size: 1.2rem; font-weight: 600;"><i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i><br>ERROR: Contact the admin<br><small style="font-size: 0.8rem; margin-top: 1rem; display: block;">' + error.message + '</small></div>';
+                                                        }
                                                     });
                                                     
                                                     // Directly trigger calculation logic
@@ -1151,8 +1240,8 @@ ob_start();
 
                                         <div class="mb-4 mt-4">
                                             <div class="row">
-                                                <h6 class="col-md-12 mb-3 text-center" style="font-size: xx-small;" >
-                                                    calculations include one solar battery and use 400W panels. 
+                                                <h6 class="col-md-12 mb-3 text-center" style="font-size: small;" >
+                                                    for DOMESTIC insallations only. calculations include one solar battery and use 400W panels. 
                                                 </h6>
                                             </div>
                                         </div>
@@ -1415,13 +1504,15 @@ ob_start();
                                 const SEAI_GRANT_CAP = <?php echo esc_js(ksrad_get_option('seai_grant_cap', '162000')); ?>;
                                 const ACA_RATE = <?php echo esc_js(ksrad_get_option('aca_rate', '12.5') / 100); ?>;
 
-                function getPanelCount() {
+                window.getPanelCount = function getPanelCount() {
                     const range = document.querySelector('input[type="range"]#panelCount');
                     if (range) return parseInt(range.value, 10) || 0;
                     const disp = document.getElementById('panelCountValue') || document.getElementById('panelCountDisplay');
                     if (disp) return parseInt(disp.textContent.trim(), 10) || 0;
                     return 0;
-                }                                function fmt(v, d = 0) {
+                };
+                
+                function fmt(v, d = 0) {
                                     return (typeof formatCurrency === 'function') ? formatCurrency(v, d) : (CURRENCY_SYMBOL + Number(v).toLocaleString());
                                 }
 
@@ -2182,6 +2273,7 @@ ob_start();
                     const shouldShow = billMonthly > 0 && panels > 0;
                     console.log('[ROI Button] billMonthly:', billMonthly, 'panels:', panels, 'shouldShow:', shouldShow);
                     roiBtnEl.style.setProperty('display', shouldShow ? 'block' : 'none', 'important');
+                    console.log('[ROI Button] After setting - display:', roiBtnEl.style.display, 'computed:', window.getComputedStyle(roiBtnEl).display);
                 }
 
                 // add an energy production estimate based on panels and available solar configs
@@ -2620,12 +2712,29 @@ ob_end_flush();
 
 // AJAX Handler for Gamma PDF Generation
 if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
-    add_action('wp_ajax_ksrad_generate_gamma_pdf', 'ksrad_handle_gamma_pdf_generation');
-    add_action('wp_ajax_nopriv_ksrad_generate_gamma_pdf', 'ksrad_handle_gamma_pdf_generation');
-
     function ksrad_handle_gamma_pdf_generation() {
-    // Verify nonce
-    check_ajax_referer('ksrad_gamma_pdf', 'nonce');
+    // Send a test response first to see if function is even called
+    error_log('=== GAMMA PDF GENERATION FUNCTION CALLED ===');
+    
+    // Check if this is even an AJAX request
+    if (!defined('DOING_AJAX') || !DOING_AJAX) {
+        error_log('ERROR: Not an AJAX request');
+        wp_send_json_error(array('message' => 'Not an AJAX request'));
+        return;
+    }
+    
+    error_log('POST data: ' . print_r($_POST, true));
+    
+    // Verify nonce - but don't die on failure, log it
+    $nonce_valid = check_ajax_referer('ksrad_gamma_pdf', 'nonce', false);
+    if (!$nonce_valid) {
+        error_log('NONCE VERIFICATION FAILED');
+        wp_send_json_error(array(
+            'message' => 'Security check failed. Please refresh the page and try again.',
+            'error_type' => 'nonce_failure'
+        ));
+        wp_die();
+    }
     
     // Get form data
     $full_name = sanitize_text_field($_POST['fullName'] ?? '');
@@ -2634,8 +2743,10 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
     $panel_count = intval($_POST['panelCount'] ?? 0);
     $location = sanitize_text_field($_POST['location'] ?? '');
     
+    @error_log('Form data received: Name=' . $full_name . ', Email=' . $email . ', Panels=' . $panel_count);
+    
     // Get API key from settings
-    $gamma_api_key = ksrad_get_option('gamma_api_key', '');
+    $gamma_api_key = ksrad_get_option('gamma_api_key', 'sk-gamma-9KmJzFjq38EdudoBOD0L0Ospjrj9Q4xUeaaaON5I');
     $gamma_template_id = ksrad_get_option('gamma_template_id', 'g_6h8kwcjnyzhxn9f');
     // gamma folder id is needed 
     $gamma_folder_id = ksrad_get_option('gamma_folder_id', '7mknfm68zejkpsf');
@@ -2645,21 +2756,80 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
         return;
     }
     
-    // Prepare prompt with solar data
-    // add all solar_data
+    // Get essential solar data for the report
     $ksrad_solarData = ksrad_get_option('', ksrad_get_default_solar_data());
-    $solar_data_json = json_encode($ksrad_solarData);    
-
-    // add $solar_data_json values to this prompt
+    
+    // Extract only key metrics to avoid overwhelming the API
+    $max_panels = $ksrad_solarData['solarPotential']['maxArrayPanelsCount'] ?? 0;
+    $max_area = $ksrad_solarData['solarPotential']['maxArrayAreaMeters2'] ?? 0;
+    $yearly_energy = 0;
+    
+    // Find energy production for selected panel count
+    if (isset($ksrad_solarData['solarPotential']['solarPanelConfigs'])) {
+        foreach ($ksrad_solarData['solarPotential']['solarPanelConfigs'] as $config) {
+            if (intval($config['panelsCount'] ?? 0) === $panel_count) {
+                $yearly_energy = floatval($config['yearlyEnergyDcKwh'] ?? 0);
+                break;
+            }
+        }
+    }
+    
+    // Create concise data summary
+    $solar_summary = sprintf(
+        "Max capacity: %d panels on %.1f m². Selected system: %d panels producing ~%.0f kWh/year.",
+        $max_panels,
+        $max_area,
+        $panel_count,
+        $yearly_energy
+    );
+    
+    // Build prompt with essential data only
     $prompt = sprintf( 
-        "Generate a solar report for %s at %s. System includes %d solar panels. Contact: %s, Phone: %s, Solar Data: %s",
+        "Generate a professional solar report for %s at %s.\n\nSystem Details:\n- %d x 400W solar panels\n- Annual production: %.0f kWh\n- Contact: %s\n- Phone: %s\n\nProperty Analysis:\n%s",
         $full_name,
         $location,
         $panel_count,
+        $yearly_energy,
         $email,
         $phone,
-        $solar_data_json
+        $solar_summary
     );
+    
+    // Prepare Gamma API request body
+    $request_body = array(
+        'gammaId' => $gamma_template_id,
+        'prompt' => $prompt,
+        'themeId' => 'default-light',
+        'exportAs' => 'pdf',
+        'imageOptions' => array(
+            'model' => 'imagen-4-pro',
+            'style' => 'Line Art'
+        ),
+        'sharingOptions' => array(
+            'workspaceAccess' => 'view',
+            'externalAccess' => 'noAccess',
+            'emailOptions' => array(
+                'recipients' => array($email),
+                'access' => 'comment'
+            )
+        )
+    );
+    
+    // Encode JSON with proper options
+    $json_body = json_encode($request_body, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    
+    // Log request for debugging
+    error_log('Gamma API Request - Template ID: ' . $gamma_template_id);
+    error_log('Gamma API Request - Email: ' . $email);
+    error_log('Gamma API Request - Prompt length: ' . strlen($prompt));
+    error_log('Gamma API Request Body: ' . $json_body);
+    error_log('Gamma API Request Body Length: ' . strlen($json_body));
+    error_log('=== CURL COMMAND FOR BROWSER/TESTING ===');
+    error_log('curl -X POST https://public-api.gamma.app/v1.0/generations/from-template \\');
+    error_log('  -H "Content-Type: application/json" \\');
+    error_log('  -H "X-API-KEY: ' . $gamma_api_key . '" \\');
+    error_log('  -d \'' . $json_body . '\'');
+    error_log('=== END CURL COMMAND ===');
     
     // Call Gamma API
     $response = wp_remote_post('https://public-api.gamma.app/v1.0/generations/from-template', array(
@@ -2667,24 +2837,7 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
             'Content-Type' => 'application/json',
             'X-API-KEY' => $gamma_api_key
         ),
-        'body' => wp_json_encode(array(
-            'gammaId' => $gamma_template_id,
-            'prompt' => $prompt,
-            'themeId' => 'Chisel',
-            'exportAs' => 'pdf',
-            'imageOptions' => array(
-                'model' => 'imagen-4-pro',
-                'style' => 'photorealistic'
-            ),
-            'sharingOptions' => array(
-                'workspaceAccess' => 'view',
-                'externalAccess' => 'noAccess',
-                'emailOptions' => array(
-                    'recipients' => array($email),
-                    'access' => 'comment'
-                )
-            )
-        )),
+        'body' => $json_body,
         'timeout' => 30
     ));
     
@@ -2695,12 +2848,43 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
     
     $body = wp_remote_retrieve_body($response);
     $data = json_decode($body, true);
+    $response_code = wp_remote_retrieve_response_code($response);
     
-    if (wp_remote_retrieve_response_code($response) !== 200) {
-        wp_send_json_error($data['message'] ?? 'Unknown error from Gamma API');
+    // Log detailed error information for debugging
+    error_log('Gamma API Response Code: ' . $response_code);
+    error_log('Gamma API Response Body: ' . $body);
+    
+    if ($response_code !== 200) {
+        $error_message = $data['message'] ?? $data['error'] ?? 'Unknown error from Gamma API (Status: ' . $response_code . ')';
+        error_log('Gamma API Error: ' . $error_message);
+        
+        // Build curl command for debugging
+        $curl_command = "curl -X POST 'https://public-api.gamma.app/v1.0/generations/from-template' \\\n  -H 'Content-Type: application/json' \\\n  -H 'X-API-KEY: " . $gamma_api_key . "' \\\n  -d '" . str_replace("'", "'\\''", $json_body) . "'";
+        
+        // Return detailed debug info even on error
+        wp_send_json_error(array(
+            'message' => $error_message,
+            'curl_command' => $curl_command,
+            'debug' => array(
+                'url' => 'https://public-api.gamma.app/v1.0/generations/from-template',
+                'method' => 'POST',
+                'headers' => array(
+                    'Content-Type' => 'application/json',
+                    'X-API-KEY' => substr($gamma_api_key, 0, 10) . '...'
+                ),
+                'body' => $request_body,
+                'response_code' => $response_code,
+                'response_body' => $data
+            )
+        ));
         return;
     }
     
+    // Build curl command for debugging
+    $curl_command = "curl -X POST 'https://public-api.gamma.app/v1.0/generations/from-template' \\\n  -H 'Content-Type: application/json' \\\n  -H 'X-API-KEY: " . $gamma_api_key . "' \\\n  -d '" . str_replace("'", "'\\''", $json_body) . "'";
+    
+    exit($curl_command);
+
     // Log the generation (optional)
     error_log(sprintf(
         'Gamma PDF generated for %s (%s) - Panel count: %d',
@@ -2711,8 +2895,22 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
     
     wp_send_json_success(array(
         'message' => 'PDF generated successfully',
-        'gamma_response' => $data
+        'gamma_response' => $data,
+        'curl_command' => $curl_command,
+        'debug' => array(
+            'url' => 'https://public-api.gamma.app/v1.0/generations/from-template',
+            'method' => 'POST',
+            'headers' => array(
+                'Content-Type' => 'application/json',
+                'X-API-KEY' => substr($gamma_api_key, 0, 10) . '...' // Partial key for security
+            ),
+            'body' => $request_body
+        )
     ));
     }
 }
+
+// Register AJAX handlers OUTSIDE function_exists check
+add_action('wp_ajax_ksrad_generate_gamma_pdf', 'ksrad_handle_gamma_pdf_generation');
+add_action('wp_ajax_nopriv_ksrad_generate_gamma_pdf', 'ksrad_handle_gamma_pdf_generation');
 ?>
