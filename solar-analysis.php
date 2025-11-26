@@ -291,8 +291,8 @@ ob_start();
 
     <!-- ROI Modal Popup (jQuery-powered, accessible) -->
     <dialog id="roiModal">
-        <button type="button" class="roi-modal-close" onclick="hideModal()" aria-label="Close modal">
-            <i class="fas fa-times"></i>
+        <button type="button" class="roi-modal-close align-right" onclick="hideModal()" aria-label="Close modal">
+            <i class="fas fa-times" style="background: transparent !important;"></i>
         </button>
         <form id="roiForm" method="dialog" class="roi-modal-form">
             <?php wp_nonce_field('ksrad_roi_form', 'ksrad_roi_nonce'); ?>
