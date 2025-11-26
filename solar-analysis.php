@@ -291,6 +291,9 @@ ob_start();
 
     <!-- ROI Modal Popup (jQuery-powered, accessible) -->
     <dialog id="roiModal">
+        <button type="button" class="roi-modal-close" onclick="hideModal()" aria-label="Close modal">
+            <i class="fas fa-times"></i>
+        </button>
         <form id="roiForm" method="dialog" class="roi-modal-form">
             <?php wp_nonce_field('ksrad_roi_form', 'ksrad_roi_nonce'); ?>
             <h3 class="roi-modal-title">Solar Report Download (RESIDENTIAL)</h3>
@@ -2762,8 +2765,8 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
     @error_log('Form data received: Name=' . $full_name . ', Email=' . $email . ', Panels=' . $panel_count);
     
     // Get API key from settings
-    $gamma_api_key = ksrad_get_option('gamma_api_key', 'sk-gamma-9KmJzFjq38EdudoBOD0L0Ospjrj9Q4xUeaaaON5I');
-    $gamma_template_id = ksrad_get_option('gamma_template_id', 'g_6h8kwcjnyzhxn9f');
+    $gamma_api_key = ksrad_get_option('gamma_api_key', '');
+    $gamma_template_id = ksrad_get_option('gamma_template_id', '');
     // gamma folder id is needed 
     $gamma_folder_id = ksrad_get_option('gamma_folder_id', '7mknfm68zejkpsf');
 
