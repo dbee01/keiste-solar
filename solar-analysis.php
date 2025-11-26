@@ -957,17 +957,14 @@ ob_start();
                                                             
                                                             // Build success message
                                                             let successMsg = '<div style="padding: 2rem; text-align: center; color: #28a745;"><i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>';
-                                                            successMsg += '<h3 style="color: #28a745; margin-bottom: 1rem;">Report Generated Successfully!</h3>';
+                                                            successMsg += '<h3 style="color: #28a745; margin-bottom: 1rem;">Report Generation Started!</h3>';
                                                             
-                                                            if (data.data && data.data.email_sent) {
-                                                                successMsg += '<p style="font-size: 1.1rem; margin-bottom: 0.5rem;">✉️ An email has been sent to <strong>' + formData.email + '</strong></p>';
-                                                                successMsg += '<p style="color: #666;">with a link to your personalized solar report.</p>';
-                                                            }
-                                                            
-                                                            if (data.data && data.data.web_url) {
-                                                                successMsg += '<p style="margin-top: 1.5rem;"><a href="' + data.data.web_url + '" target="_blank" class="btn btn-primary">View Report Now</a></p>';
+                                                            if (data.data && data.data.email_scheduled) {
+                                                                successMsg += '<p style="font-size: 1.1rem; margin-bottom: 0.5rem;">📧 An email will be sent to <strong>' + formData.email + '</strong></p>';
+                                                                successMsg += '<p style="color: #666; margin-bottom: 1rem;">in approximately <strong>15 minutes</strong> with a link to your personalized solar report.</p>';
+                                                                successMsg += '<p style="color: #999; font-size: 0.9rem;">The Gamma AI system needs a few minutes to generate your custom report with all the calculations and visualizations.</p>';
                                                             } else {
-                                                                successMsg += '<p style="color: #666; margin-top: 1rem;">Check your inbox in 10-15 minutes for your report link.</p>';
+                                                                successMsg += '<p style="color: #666; margin-top: 1rem;">Your report is being generated. Check your inbox in 15 minutes.</p>';
                                                             }
                                                             
                                                             successMsg += '</div>';

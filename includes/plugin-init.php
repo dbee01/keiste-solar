@@ -29,6 +29,9 @@ class KSRAD_Plugin {
         add_action('wp_ajax_ksrad_generate_gamma_pdf', array($this, 'handle_gamma_pdf_generation'));
         add_action('wp_ajax_nopriv_ksrad_generate_gamma_pdf', array($this, 'handle_gamma_pdf_generation'));
         
+        // Register scheduled email handler
+        add_action('ksrad_send_gamma_report_email', array($this, 'send_scheduled_gamma_email'));
+        
         // Add activation/deactivation hooks
         register_activation_hook(KSRAD_PLUGIN_BASENAME, array($this, 'activate'));
         register_deactivation_hook(KSRAD_PLUGIN_BASENAME, array($this, 'deactivate'));
@@ -216,6 +219,9 @@ class KSRAD_Plugin {
      * Plugin deactivation
      */
     public function deactivate() {
+        // Clear any scheduled email events
+        wp_clear_scheduled_hook('ksrad_send_gamma_report_email');
+        
         // Flush rewrite rules
         flush_rewrite_rules();
     }
@@ -295,45 +301,79 @@ class KSRAD_Plugin {
         
         $result = json_decode($body, true);
         
-        // Extract the web URL from the response
-        $web_url = $result['webUrl'] ?? null;
+        // Get generation ID for building the Gamma URL
+        $generation_id = $result['generationId'] ?? null;
         
-        // Send email to user with report link
-        if (!empty($email) && !empty($web_url)) {
-            $subject = 'Your Keiste Solar Report is Ready';
-            $message = sprintf(
-                "Hello %s,\n\n" .
-                "Your personalized solar report has been generated successfully!\n\n" .
-                "You can view your report here:\n%s\n\n" .
-                "Report Details:\n" .
-                "- Location: %s\n" .
-                "- Solar Panels: %d x 400W\n\n" .
-                "If you have any questions about your report, please don't hesitate to contact us.\n\n" .
-                "Best regards,\n" .
-                "Keiste Solar Team",
-                $full_name,
-                $web_url,
-                $location,
-                $panel_count
+        // Schedule email to be sent in 15 minutes
+        if (!empty($email) && !empty($generation_id)) {
+            // Build the Gamma report URL
+            $gamma_url = 'https://gamma.app/docs/Solar-Report-for-' . sanitize_title($full_name) . '-' . $generation_id;
+            
+            // Schedule the email for 15 minutes from now
+            $email_data = array(
+                'email' => $email,
+                'full_name' => $full_name,
+                'gamma_url' => $gamma_url,
+                'location' => $location,
+                'panel_count' => $panel_count
             );
             
-            $headers = array(
-                'Content-Type: text/plain; charset=UTF-8',
-                'From: Keiste Solar <noreply@' . $_SERVER['HTTP_HOST'] . '>'
-            );
+            $scheduled = wp_schedule_single_event(time() + (15 * 60), 'ksrad_send_gamma_report_email', array($email_data));
             
-            $email_sent = wp_mail($email, $subject, $message, $headers);
-            
-            error_log('Email sent to ' . $email . ': ' . ($email_sent ? 'SUCCESS' : 'FAILED'));
+            if ($scheduled !== false) {
+                error_log('KSRAD: ✅ Successfully scheduled email for ' . $email . ' to be sent in 15 minutes');
+                error_log('KSRAD: Report URL: ' . $gamma_url);
+                error_log('KSRAD: Scheduled time: ' . date('Y-m-d H:i:s', time() + (15 * 60)));
+            } else {
+                error_log('KSRAD: ❌ FAILED to schedule email for ' . $email);
+            }
         }
         
         wp_send_json_success(array(
             'message' => 'PDF generation started successfully',
-            'generation_id' => $result['generationId'] ?? null,
-            'web_url' => $web_url,
-            'email_sent' => isset($email_sent) ? $email_sent : false,
+            'generation_id' => $generation_id,
+            'email_scheduled' => !empty($email) && !empty($generation_id),
             'response' => $result
         ));
+    }
+    
+    /**
+     * Send scheduled Gamma report email
+     * Called by WordPress cron 15 minutes after report generation
+     */
+    public function send_scheduled_gamma_email($email_data) {
+        if (empty($email_data['email']) || empty($email_data['gamma_url'])) {
+            error_log('KSRAD: Cannot send email - missing email or URL');
+            return;
+        }
+        
+        $subject = 'Your Keiste Solar Report is Ready';
+        $message = sprintf(
+            "Hello %s,\n\n" .
+            "Your personalized solar report has been generated and is ready to view!\n\n" .
+            "You can access your report here:\n%s\n\n" .
+            "Report Details:\n" .
+            "- Location: %s\n" .
+            "- Solar Panels: %d x 400W\n\n" .
+            "This link will remain active and you can revisit it anytime to review your solar analysis.\n\n" .
+            "If you have any questions about your report, please don't hesitate to contact us.\n\n" .
+            "Best regards,\n" .
+            "Keiste Solar Team",
+            $email_data['full_name'],
+            $email_data['gamma_url'],
+            $email_data['location'],
+            $email_data['panel_count']
+        );
+        
+        $headers = array(
+            'Content-Type: text/plain; charset=UTF-8',
+            'From: Keiste Solar <noreply@' . $_SERVER['HTTP_HOST'] . '>'
+        );
+        
+        $email_sent = wp_mail($email_data['email'], $subject, $message, $headers);
+        
+        error_log('KSRAD: Scheduled email sent to ' . $email_data['email'] . ': ' . ($email_sent ? 'SUCCESS' : 'FAILED'));
+        error_log('KSRAD: Report URL: ' . $email_data['gamma_url']);
     }
 }
 
