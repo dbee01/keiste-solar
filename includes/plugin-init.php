@@ -294,9 +294,44 @@ class KSRAD_Plugin {
         }
         
         $result = json_decode($body, true);
+        
+        // Extract the web URL from the response
+        $web_url = $result['webUrl'] ?? null;
+        
+        // Send email to user with report link
+        if (!empty($email) && !empty($web_url)) {
+            $subject = 'Your Keiste Solar Report is Ready';
+            $message = sprintf(
+                "Hello %s,\n\n" .
+                "Your personalized solar report has been generated successfully!\n\n" .
+                "You can view your report here:\n%s\n\n" .
+                "Report Details:\n" .
+                "- Location: %s\n" .
+                "- Solar Panels: %d x 400W\n\n" .
+                "If you have any questions about your report, please don't hesitate to contact us.\n\n" .
+                "Best regards,\n" .
+                "Keiste Solar Team",
+                $full_name,
+                $web_url,
+                $location,
+                $panel_count
+            );
+            
+            $headers = array(
+                'Content-Type: text/plain; charset=UTF-8',
+                'From: Keiste Solar <noreply@' . $_SERVER['HTTP_HOST'] . '>'
+            );
+            
+            $email_sent = wp_mail($email, $subject, $message, $headers);
+            
+            error_log('Email sent to ' . $email . ': ' . ($email_sent ? 'SUCCESS' : 'FAILED'));
+        }
+        
         wp_send_json_success(array(
             'message' => 'PDF generation started successfully',
             'generation_id' => $result['generationId'] ?? null,
+            'web_url' => $web_url,
+            'email_sent' => isset($email_sent) ? $email_sent : false,
             'response' => $result
         ));
     }

@@ -3,7 +3,7 @@
  * Plugin Name: Keiste Solar Report
  * Plugin URI: https://keiste.ie/solar-analysis
  * Description: Comprehensive solar panel analysis tool with ROI calculations, Google Solar API integration, interactive charts, and PDF report generation.
- * Version: 1.0.0
+ * Version: 1.0.9
  * Author: Keiste
  * Author URI: https://keiste.ie
  * License: GPL v2 or later
@@ -24,7 +24,7 @@ if (!defined('WPINC')) {
 
 // Define plugin constants (only once) with ksrad_ namespace
 if (!defined('KSRAD_VERSION')) {
-    define('KSRAD_VERSION', '1.0.8');
+    define('KSRAD_VERSION', '1.0.9');
 }
 if (!defined('KSRAD_PLUGIN_DIR')) {
     define('KSRAD_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -293,7 +293,10 @@ ob_start();
     <dialog id="roiModal">
         <form id="roiForm" method="dialog" class="roi-modal-form">
             <?php wp_nonce_field('ksrad_roi_form', 'ksrad_roi_nonce'); ?>
-            <h3 class="roi-modal-title">Solar Report Download</h3>
+            <h3 class="roi-modal-title">Solar Report Download (RESIDENTIAL)</h3>
+            <div class="roi-form-group text-center">
+                <label>I have entered both my electricity bill and panel number choice. I am happy with my figures and I understand I can only download one report.</label>
+            </div>
             <div class="roi-form-group">
                 <label for="roiFullName">Full Name <span class="required">*</span></label>
                 <input id="roiFullName" name="fullName" type="text" class="roi-input" required autofocus
@@ -310,7 +313,7 @@ ob_start();
             </div>
             <div class="roi-form-group roi-gdpr-group">
                 <input id="roiGdpr" name="gdpr" type="checkbox" required>
-                <label for="roiGdpr" class="roi-gdpr-label">I agree to the <a href="https://keiste.com/data-use-keiste-solar-report/"
+                <label for="roiGdpr" class="roi-gdpr-label small">I agree to the <a href="https://keiste.com/data-use-keiste-solar-report/"
                         target="_blank">Data Use Policy</a><span
                         class="required">*</span></label>
             </div>
@@ -345,8 +348,9 @@ ob_start();
         <?php if (!$ksrad_isAjaxRequest): ?>
             <div id="ajaxHeader" class="alert alert-info" role="alert"
                 style="text-align: center; background: rgba(255, 215, 0, 0.1); border: 2px solid var(--accent-yellow); border-radius: 8px; padding: 2rem; margin: 2rem auto; max-width: 600px;">
-                <h4 style="color: var(--primary-green); margin-bottom: 1rem; font-size: 1.3em;">🔍 Find Your Solar Potential
+                <h4 style="color: var(--primary-green); margin-bottom: 1rem; font-size: 1.3em;">🔍 Find Your Solar Potential 
                 </h4>
+                <h5 class="align-center">(RESIDENTIAL VERSION)</h5>
                 <p style="color: var(--primary-green); margin-bottom: 0.5rem;">Use the search box below to select an
                     address.</p>
                 <p style="color: var(--primary-green); font-size: 0.95rem; margin-bottom: 0;">We'll analyze solar potential
@@ -687,7 +691,7 @@ ob_start();
                                             <div class="colFlex">
                                                 <i class="fas fa-exchange-alt"></i>
                                                 <div class="resultsCol" style="border-left: unset;">
-                                                    <span class="highlight" id="netIncome"><?php echo esc_html(ksrad_get_option('currency', '€')); ?>0</span>
+                                                    <span class="highlight" id="netIncome">0</span>
                                                     <div class="ms-2 underWrite">MONTHLY INC/EXP</div>
                                                 </div>
                                             </div>
@@ -951,10 +955,27 @@ ob_start();
                                                         if (data.success) {
                                                             console.log('✅ PDF generated successfully:', data.data);
                                                             
+                                                            // Build success message
+                                                            let successMsg = '<div style="padding: 2rem; text-align: center; color: #28a745;"><i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i>';
+                                                            successMsg += '<h3 style="color: #28a745; margin-bottom: 1rem;">Report Generated Successfully!</h3>';
+                                                            
+                                                            if (data.data && data.data.email_sent) {
+                                                                successMsg += '<p style="font-size: 1.1rem; margin-bottom: 0.5rem;">✉️ An email has been sent to <strong>' + formData.email + '</strong></p>';
+                                                                successMsg += '<p style="color: #666;">with a link to your personalized solar report.</p>';
+                                                            }
+                                                            
+                                                            if (data.data && data.data.web_url) {
+                                                                successMsg += '<p style="margin-top: 1.5rem;"><a href="' + data.data.web_url + '" target="_blank" class="btn btn-primary">View Report Now</a></p>';
+                                                            } else {
+                                                                successMsg += '<p style="color: #666; margin-top: 1rem;">Check your inbox in 10-15 minutes for your report link.</p>';
+                                                            }
+                                                            
+                                                            successMsg += '</div>';
+                                                            
                                                             // Update form with success message
                                                             const formEl = document.getElementById('roiForm');
                                                             if (formEl) {
-                                                                formEl.innerHTML = '<div style="padding: 2rem; text-align: center; color: #28a745; font-size: 1.2rem; font-weight: 600;"><i class="fas fa-check-circle" style="font-size: 3rem; margin-bottom: 1rem;"></i><br>SUCCESS: Check your inbox in 10 to 15 mins for your report</div>';
+                                                                formEl.innerHTML = successMsg;
                                                             }
                                                         } else {
                                                             console.error('❌ PDF generation failed');
@@ -1224,7 +1245,7 @@ ob_start();
                                         <div class="col-md-6 mb-3 align-center grant-box" style="padding-left: 2rem;">
                                             <div>
                                                 <input type="checkbox" id="inclGrant" checked required>
-                                                <label for="inclGrant" class="form-label"><I>Include Solar Grant (%)</I></label>
+                                                <label for="inclGrant" class="form-label"><I>Include Solar Domestic Grant (%)</I></label>
                                             </div>
                                             <div style="display: none;">
                                                 <input type="checkbox" id="inclACA" required>
@@ -2370,19 +2391,6 @@ ob_start();
                 const monthlyRepay = Math.round(inclLoan ? principal * (r / (1 - Math.pow(1 + r, -n))) : 0);
                 const yearlyLoanCost = Math.round(inclLoan ? monthlyRepay * 12 : 0);
 
-                // Monthly charge (Year 0)
-                const exportKWh_mo = yearlyEnergyKWh * exportRate / 12;
-                const selfKWh_mo = yearlyEnergyKWh * (1 - exportRate) / 12;
-
-                console.log('exportKWh_mo', exportKWh_mo);
-                console.log('selfKWh_mo', selfKWh_mo);
-                
-                // Math.pow(1 + ANNUAL_INCREASE, 0) === 1, simplify for clarity
-                const monthly_charge = (selfKWh_mo * RETAIL)
-                    + (exportKWh_mo * FIT)
-                    - (inclLoan ? monthlyRepay : 0)
-                    - (billMonthly);
-
                 // Total 25-year savings (benefits - cost + ACA if included)
                 const benefits25 = Array.from({ length: YRS_OF_SYSTEM }, (_, y) => {
                     const pvYear = panels * DAY_POWER_AVG * DAYS_IN_YR * Math.pow(1 - SOLAR_PANEL_DEGRADATION, y);
@@ -2398,41 +2406,49 @@ ob_start();
                 const loanCost25 = inclLoan ? (monthlyRepay * 12 * loanYearsCount) : principal; // total paid on loan within evaluation window
                 const total_yr_savings = benefits25 - loanCost25 + (inclACA ? acaAllowance : 0);
 
-                // Payback period (years) - simple approach: net cost / annual monetary benefit
-                // Notes on fixes:
-                // - Use compounding multiplier directly (COMPOUND_7_YRS is already a multiplier),
-                //   do NOT add 1 to it. (Previously used 1 + COMPOUND_7_YRS which double-counted.)
-                // - Annual monetary benefit per kWh should be exportRate*FIT + (1-exportRate)*RETAIL,
-                //   not FIT + RETAIL*(1-exportRate).
-                const payback_period = (() => {
-                    // If loan is included, use total loan payments within the evaluation window
-                    // as the effective investment to pay back; otherwise use the net install cost.
-                    // This gives a more accurate reflection of cashflows when a loan is used.
-                    const investment = inclLoan ? loanCost25 : net_install_cost;
-                    // Apply a simplified tax adjustment as before (preserves previous intent)
-                    const numerator = investment * (1 - CORPORATION_TAX);
+                // First-year annual saving (calculate this BEFORE payback so we can use it)
+                const savings_year0 = (() => {
+                    // Current electricity usage based on their bill
+                    const current_usage_kwh = (billMonthly * 12) / RETAIL;
+                    
+                    // Total solar production
+                    const annual_solar_kwh = panels * DAY_POWER_AVG * DAYS_IN_YR;
+                    
+                    // Self-consumption: what they can use themselves (capped by their actual usage)
+                    const max_self_consumption_kwh = annual_solar_kwh * (1 - exportRate);
+                    const actual_self_consumption_kwh = Math.min(max_self_consumption_kwh, current_usage_kwh);
+                    
+                    // Export: everything not self-consumed
+                    const export_kwh = annual_solar_kwh - actual_self_consumption_kwh;
+                    
+                    // Financial benefits
+                    const bill_savings = actual_self_consumption_kwh * RETAIL;  // Avoided electricity cost
+                    const export_income = export_kwh * FIT;                     // Export income
+                    const loan_cost = inclLoan ? yearlyLoanCost : 0;
+                    const acaBump = (inclACA ? acaAllowance : 0);
+                    
+                    return bill_savings + export_income - loan_cost + acaBump;
+                })();
 
-                    // Annual energy produced (kWh) * average value per kWh
-                    const annualEnergy = DAY_POWER_AVG * panels * DAYS_IN_YR;
-                    const valuePerKwh = (exportRate * FIT) + ((1 - exportRate) * RETAIL);
-                    const denom = annualEnergy * valuePerKwh;
-                    return denom > 0 ? numerator / denom : 0;
+                // Monthly charge (Year 0) - based on actual savings
+                const monthly_charge = (savings_year0 / 12) - billMonthly;
+
+                // Payback period (years) - uses actual net annual savings
+                const payback_period = (() => {
+                    // Investment amount to pay back
+                    const investment = inclLoan ? loanCost25 : net_install_cost;
+                    
+                    // Net annual savings (year 0) - this is what actually goes back into your pocket
+                    const annualSavings = savings_year0;
+                    
+                    // Payback = Investment / Annual Savings
+                    return annualSavings > 0 ? investment / annualSavings : 0;
                 })();
 
                 // ROI over 25 years (%)
                 const ROI_25Y = (() => {
                     const cost = inclLoan ? (monthlyRepay * 12 * loanYearsCount) : principal;
                     return cost > 0 ? ((benefits25 - cost) / cost) * 100 : 0;
-                })();
-
-                // First-year annual saving
-                const savings_year0 = (() => {
-                    const k = panels * DAY_POWER_AVG * DAYS_IN_YR;
-                    const self = k * (1 - exportRate) * RETAIL;
-                    const exp = k * exportRate * FIT;
-                    const loan = inclLoan ? yearlyLoanCost : 0;
-                    const acaBump = (inclACA ? acaAllowance : 0);
-                    return self + exp - loan + acaBump;
                 })();
 
                 // CO2 reduction over life
@@ -2703,6 +2719,9 @@ ob_start();
             window.calculateROI = calculateROI;
         })();
         </script>
+
+        <!-- INLINED ROI Calculator JS for cache busting - v1.0.9 -->
+
 </body>
 
 </html>
@@ -2776,7 +2795,7 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
     
     // Create concise data summary
     $solar_summary = sprintf(
-        "Max capacity: %d panels on %.1f m². Selected system: %d panels producing ~%.0f kWh/year.",
+        "Max capacity: %d panels on %.1f m². Selected system size (chosen by user): %d panels producing ~%.0f kWh/year.",
         $max_panels,
         $max_area,
         $panel_count,
@@ -2785,7 +2804,7 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
     
     // Build prompt with essential data only
     $prompt = sprintf( 
-        "Generate a professional solar report for %s at %s.\n\nSystem Details:\n- %d x 400W solar panels\n- Annual production: %.0f kWh\n- Contact: %s\n- Phone: %s\n\nProperty Analysis:\n%s",
+        "Generate a professional solar report for %s at %s.\n\nChosen system Details:\n- %d x 400W solar panels\n- Annual production: %.0f kWh\n- Contact: %s\n- Phone: %s\n\nProperty Analysis:\n%s",
         $full_name,
         $location,
         $panel_count,
@@ -2802,15 +2821,16 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
         'themeId' => 'default-light',
         'exportAs' => 'pdf',
         'imageOptions' => array(
+            'source' => 'ai-generated',
             'model' => 'imagen-4-pro',
-            'style' => 'Line Art'
+            'style' => 'minimal black and white, line art at 60% transparency'
         ),
         'sharingOptions' => array(
             'workspaceAccess' => 'view',
-            'externalAccess' => 'noAccess',
+            'externalAccess' => 'view',
             'emailOptions' => array(
                 'recipients' => array($email),
-                'access' => 'comment'
+                'access' => 'view'
             )
         )
     );
@@ -2883,8 +2903,6 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
     // Build curl command for debugging
     $curl_command = "curl -X POST 'https://public-api.gamma.app/v1.0/generations/from-template' \\\n  -H 'Content-Type: application/json' \\\n  -H 'X-API-KEY: " . $gamma_api_key . "' \\\n  -d '" . str_replace("'", "'\\''", $json_body) . "'";
     
-    exit($curl_command);
-
     // Log the generation (optional)
     error_log(sprintf(
         'Gamma PDF generated for %s (%s) - Panel count: %d',
@@ -2892,7 +2910,12 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
         $email,
         $panel_count
     ));
-    
+  
+    // email the user a link to their generated report on gamma.app in the format:
+    // eg. https://gamma.app/docs/Solar-Report-for-John-Thomas-j9or10uoquw3l52
+    $ksrad_user_report_email = "https://gamma.app/docs/Solar-Report-for-" . str_replace(' ', '-', $full_name) . "-" . ($data['documentId'] ?? 'unknownid');
+
+
     wp_send_json_success(array(
         'message' => 'PDF generated successfully',
         'gamma_response' => $data,

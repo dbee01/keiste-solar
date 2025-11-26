@@ -1,7 +1,7 @@
 /**
  * Keiste Solar Analysis - ROI Calculator
  * Financial calculations and UI updates
- * Version: 1.0.0
+ * Version: 1.0.1
  */
 
 (function () {
@@ -194,10 +194,32 @@
         const monthlyRepay = Math.round(inclLoan ? principal * (r / (1 - Math.pow(1 + r, -n))) : 0);
         const yearlyLoanCost = Math.round(inclLoan ? monthlyRepay * 12 : 0);
 
-        const exportKWh_mo = yearlyEnergyKWh * exportRate / 12;
-        const selfKWh_mo = yearlyEnergyKWh * (1 - exportRate) / 12;
+        // CORRECTED CALCULATION - Cap self-consumption to actual usage
+        const current_usage_kwh = (billMonthly * 12) / RETAIL;
+        const annual_solar_kwh = panels * DAY_POWER_AVG * DAYS_IN_YR;
+        
+        // If customer uses more than solar produces, they consume it all
+        // If solar produces more, apply export rate
+        let actual_self_consumption_kwh, export_kwh;
+        if (annual_solar_kwh <= current_usage_kwh) {
+            // Customer uses all solar production
+            actual_self_consumption_kwh = annual_solar_kwh;
+            export_kwh = 0;
+        } else {
+            // Solar exceeds usage, apply export rate to the excess
+            actual_self_consumption_kwh = annual_solar_kwh * (1 - exportRate);
+            export_kwh = annual_solar_kwh * exportRate;
+        }
+        
+        const savings_year0 = (() => {
+            const bill_savings = actual_self_consumption_kwh * RETAIL;
+            const export_income = export_kwh * FIT;
+            const loan_cost = inclLoan ? yearlyLoanCost : 0;
+            const acaBump = (inclACA ? acaAllowance : 0);
+            return bill_savings + export_income - loan_cost + acaBump;
+        })();
 
-        const monthly_charge = (selfKWh_mo * RETAIL) + (exportKWh_mo * FIT) - (inclLoan ? monthlyRepay : 0) - (billMonthly);
+        const monthly_charge = (savings_year0 / 12) - billMonthly;
 
         // 25-year benefits
         const benefits25 = Array.from({ length: YRS_OF_SYSTEM }, (_, y) => {
@@ -213,27 +235,11 @@
         const loanCost25 = inclLoan ? (monthlyRepay * 12 * loanYearsCount) : principal;
         const total_yr_savings = benefits25 - loanCost25 + (inclACA ? acaAllowance : 0);
 
-        const payback_period = (() => {
-            const investment = inclLoan ? loanCost25 : net_install_cost;
-            const numerator = investment * (1 - CORPORATION_TAX);
-            const annualEnergy = DAY_POWER_AVG * panels * DAYS_IN_YR;
-            const valuePerKwh = (exportRate * FIT) + ((1 - exportRate) * RETAIL);
-            const denom = annualEnergy * valuePerKwh;
-            return denom > 0 ? numerator / denom : 0;
-        })();
+        const payback_period = savings_year0 > 0 ? net_install_cost / savings_year0 : 0;
 
         const ROI_25Y = (() => {
             const cost = inclLoan ? (monthlyRepay * 12 * loanYearsCount) : principal;
             return cost > 0 ? ((benefits25 - cost) / cost) * 100 : 0;
-        })();
-
-        const savings_year0 = (() => {
-            const k = panels * DAY_POWER_AVG * DAYS_IN_YR;
-            const self = k * (1 - exportRate) * RETAIL;
-            const exp = k * exportRate * FIT;
-            const loan = inclLoan ? yearlyLoanCost : 0;
-            const acaBump = (inclACA ? acaAllowance : 0);
-            return self + exp - loan + acaBump;
         })();
 
         const co2_reduction = CO2_COEFFICIENT_TONNES *

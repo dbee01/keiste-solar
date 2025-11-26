@@ -186,6 +186,22 @@ class KSRAD_Admin {
             'api_keys_section'
         );
         
+        add_settings_field(
+            'gamma_api_key',
+            'Gamma API Key',
+            array($this, 'gamma_api_key_callback'),
+            'keiste-solar-admin',
+            'api_keys_section'
+        );
+        
+        add_settings_field(
+            'gamma_template_id',
+            'Gamma Template ID',
+            array($this, 'gamma_template_id_callback'),
+            'keiste-solar-admin',
+            'api_keys_section'
+        );
+        
         // Branding Section
         add_settings_section(
             'branding_section',
@@ -401,6 +417,14 @@ class KSRAD_Admin {
         
         if (isset($input['report_key'])) {
             $new_input['report_key'] = sanitize_text_field($input['report_key']);
+        }
+        
+        if (isset($input['gamma_api_key'])) {
+            $new_input['gamma_api_key'] = sanitize_text_field($input['gamma_api_key']);
+        }
+        
+        if (isset($input['gamma_template_id'])) {
+            $new_input['gamma_template_id'] = sanitize_text_field($input['gamma_template_id']);
         }
         
         if (isset($input['enable_pdf_export'])) {
@@ -623,6 +647,22 @@ class KSRAD_Admin {
             isset($this->options['report_key']) ? esc_attr($this->options['report_key']) : ''
         );
         echo '<p class="description">Optional key for report authentication</p>';
+    }
+    
+    public function gamma_api_key_callback() {
+        printf(
+            '<input type="text" id="gamma_api_key" name="ksrad_options[gamma_api_key]" value="%s" class="regular-text" />',
+            isset($this->options['gamma_api_key']) ? esc_attr($this->options['gamma_api_key']) : ''
+        );
+        echo '<p class="description">API key for Gamma.app PDF generation service</p>';
+    }
+    
+    public function gamma_template_id_callback() {
+        printf(
+            '<input type="text" id="gamma_template_id" name="ksrad_options[gamma_template_id]" value="%s" class="regular-text" />',
+            isset($this->options['gamma_template_id']) ? esc_attr($this->options['gamma_template_id']) : ''
+        );
+        echo '<p class="description">Template ID for Gamma report generation (e.g., g_6h8kwcjnyzhxn9f)</p>';
     }
     
     public function enable_pdf_export_callback() {
