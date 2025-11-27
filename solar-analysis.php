@@ -291,9 +291,7 @@ ob_start();
 
     <!-- ROI Modal Popup (jQuery-powered, accessible) -->
     <dialog id="roiModal">
-        <button type="button" class="roi-modal-close align-right" onclick="hideModal()" aria-label="Close modal">
-            <i class="fas fa-times" style="background: transparent !important;"></i>
-        </button>
+        <button type="button" class="roi-modal-close" onclick="hideModal()" aria-label="Close">&times;</button>
         <form id="roiForm" method="dialog" class="roi-modal-form">
             <?php wp_nonce_field('ksrad_roi_form', 'ksrad_roi_nonce'); ?>
             <h3 class="roi-modal-title">Solar Report Download (RESIDENTIAL)</h3>
@@ -964,10 +962,9 @@ ob_start();
                                                             
                                                             if (data.data && data.data.email_scheduled) {
                                                                 successMsg += '<p style="font-size: 1.1rem; margin-bottom: 0.5rem;">📧 An email will be sent to <strong>' + formData.email + '</strong></p>';
-                                                                successMsg += '<p style="color: #666; margin-bottom: 1rem;">in approximately <strong>15 minutes</strong> with a link to your personalized solar report.</p>';
-                                                                successMsg += '<p style="color: #999; font-size: 0.9rem;">The Gamma AI system needs a few minutes to generate your custom report with all the calculations and visualizations.</p>';
+                                                                successMsg += '<p style="color: #666; margin-bottom: 1rem;">in approximately <strong>2-3 business hours</strong> with a link to your personalized solar report.</p>';
                                                             } else {
-                                                                successMsg += '<p style="color: #666; margin-top: 1rem;">Your report is being generated. Check your inbox in 15 minutes.</p>';
+                                                                successMsg += '<p style="color: #666; margin-top: 1rem;">Your report is being generated. Check your inbox in a few hours.</p>';
                                                             }
                                                             
                                                             successMsg += '</div>';
@@ -1245,7 +1242,7 @@ ob_start();
                                         <div class="col-md-6 mb-3 align-center grant-box" style="padding-left: 2rem;">
                                             <div>
                                                 <input type="checkbox" id="inclGrant" checked required>
-                                                <label for="inclGrant" class="form-label"><I>Include Solar Domestic Grant (%)</I></label>
+                                                <label for="inclGrant" class="form-label"><I>Include Solar Grant (%)</I></label>
                                             </div>
                                             <div style="display: none;">
                                                 <input type="checkbox" id="inclACA" required>
@@ -1262,7 +1259,7 @@ ob_start();
                                         <div class="mb-4 mt-4">
                                             <div class="row">
                                                 <h6 class="col-md-12 mb-3 text-center" style="font-size: small;" >
-                                                    for DOMESTIC insallations only. calculations include one solar battery and use 400W panels. 
+                                                    for RESIDENTIAL insallations only. calculations include one solar battery and use 400W panels. 
                                                 </h6>
                                             </div>
                                         </div>
@@ -1272,7 +1269,7 @@ ob_start();
                                 </div>
 
                                      <!-- Download button (triggered via JS after calculation) -->            
-                                <div class="text-center mt-4">
+                                <div class="text-center mt-4" style="display: none;" >
                                     <button id="roiBtn" type="button" class="btn btn-primary" style="display: none;">DOWNLOAD<br>REPORT</button>
                                 </div>
 
@@ -2766,7 +2763,7 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
     
     // Get API key from settings
     $gamma_api_key = ksrad_get_option('gamma_api_key', '');
-    $gamma_template_id = ksrad_get_option('gamma_template_id', '');
+    $gamma_template_id = ksrad_get_option('gamma_template_id', 'g_6h8kwcjnyzhxn9f');
     // gamma folder id is needed 
     $gamma_folder_id = ksrad_get_option('gamma_folder_id', '7mknfm68zejkpsf');
 
@@ -2823,7 +2820,7 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
         'imageOptions' => array(
             'source' => 'ai-generated',
             'model' => 'imagen-4-pro',
-            'style' => 'minimal black and white, line art at 60% transparency'
+            'style' => 'minimal black and white colour theme with black and white line art. Do not use background images with text overlays.'
         ),
         'sharingOptions' => array(
             'workspaceAccess' => 'view',
@@ -2910,11 +2907,6 @@ if (!function_exists('ksrad_handle_gamma_pdf_generation')) {
         $email,
         $panel_count
     ));
-  
-    // email the user a link to their generated report on gamma.app in the format:
-    // eg. https://gamma.app/docs/Solar-Report-for-John-Thomas-j9or10uoquw3l52
-    $ksrad_user_report_email = "https://gamma.app/docs/Solar-Report-for-" . str_replace(' ', '-', $full_name) . "-" . ($data['documentId'] ?? 'unknownid');
-
 
     wp_send_json_success(array(
         'message' => 'PDF generated successfully',

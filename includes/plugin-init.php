@@ -247,9 +247,20 @@ class KSRAD_Plugin {
         $panel_count = intval($_POST['panelCount'] ?? 0);
         $location = sanitize_text_field($_POST['location'] ?? '');
         
-        // Get API credentials
-        $gamma_api_key = ksrad_get_option('gamma_api_key', 'sk-gamma-9KmJzFjq38EdudoBOD0L0Ospjrj9Q4xUeaaaON5I');
-        $gamma_template_id = ksrad_get_option('gamma_template_id', 'g_6h8kwcjnyzhxn9f');
+        // Get API credentials with hardcoded defaults
+        $gamma_api_key = ksrad_get_option('gamma_api_key', '');
+        $gamma_template_id = ksrad_get_option('gamma_template_id', '');
+        
+        // Use hardcoded defaults if not configured
+        if (empty($gamma_api_key)) {
+            $gamma_api_key = 'sk-gamma-9KmJzFjq38EdudoBOD0L0Ospjrj9Q4xUeaaaON5I';
+        }
+        if (empty($gamma_template_id)) {
+            $gamma_template_id = 'g_6h8kwcjnyzhxn9f';
+        }
+        
+        error_log('Using Gamma API Key: ' . substr($gamma_api_key, 0, 15) . '...');
+        error_log('Using Gamma Template ID: ' . $gamma_template_id);
         
         if (empty($gamma_api_key) || empty($gamma_template_id)) {
             wp_send_json_error('API not configured');
@@ -301,14 +312,34 @@ class KSRAD_Plugin {
         
         $result = json_decode($body, true);
         
-        // Get generation ID for building the Gamma URL
-        $generation_id = $result['generationId'] ?? null;
+        // Log the full response to see what we're getting
+        error_log('=== GAMMA API FULL RESPONSE ===');
+        error_log(print_r($result, true));
+        error_log('=== END GAMMA RESPONSE ===');
         
-        // Schedule email to be sent in 15 minutes
-        if (!empty($email) && !empty($generation_id)) {
-            // Build the Gamma report URL
+        // Get all possible ID fields from response
+        $generation_id = $result['generationId'] ?? null;
+        $document_id = $result['documentId'] ?? null;
+        $web_url = $result['webUrl'] ?? null;
+        
+        // Determine which URL to use - prefer webUrl if available, otherwise construct from documentId or generationId
+        $gamma_url = null;
+        if (!empty($web_url)) {
+            $gamma_url = $web_url;
+            error_log('Using webUrl from response: ' . $gamma_url);
+        } elseif (!empty($document_id)) {
+            $gamma_url = 'https://gamma.app/docs/Solar-Report-for-' . sanitize_title($full_name) . '-' . $document_id;
+            error_log('Constructed URL from documentId: ' . $gamma_url);
+        } elseif (!empty($generation_id)) {
+            // Fallback to generation ID if document ID not available yet
             $gamma_url = 'https://gamma.app/docs/Solar-Report-for-' . sanitize_title($full_name) . '-' . $generation_id;
-            
+            error_log('Constructed URL from generationId (fallback): ' . $gamma_url);
+        }
+        
+        // Schedule email to be sent in 15 minutes if we have a URL
+        // TEMPORARILY DISABLED - Email feature toggled off
+        $email_scheduled = false;
+        if (false && !empty($email) && !empty($gamma_url)) {
             // Schedule the email for 15 minutes from now
             $email_data = array(
                 'email' => $email,
@@ -318,21 +349,21 @@ class KSRAD_Plugin {
                 'panel_count' => $panel_count
             );
             
-            $scheduled = wp_schedule_single_event(time() + (15 * 60), 'ksrad_send_gamma_report_email', array($email_data));
+            wp_schedule_single_event(time() + (15 * 60), 'ksrad_send_gamma_report_email', array($email_data));
             
-            if ($scheduled !== false) {
-                error_log('KSRAD: ✅ Successfully scheduled email for ' . $email . ' to be sent in 15 minutes');
-                error_log('KSRAD: Report URL: ' . $gamma_url);
-                error_log('KSRAD: Scheduled time: ' . date('Y-m-d H:i:s', time() + (15 * 60)));
-            } else {
-                error_log('KSRAD: ❌ FAILED to schedule email for ' . $email);
-            }
+            error_log('Scheduled email for ' . $email . ' to be sent in 15 minutes with URL: ' . $gamma_url);
+            $email_scheduled = true;
+        } else {
+            error_log('Email feature DISABLED - not scheduling email');
         }
         
         wp_send_json_success(array(
             'message' => 'PDF generation started successfully',
             'generation_id' => $generation_id,
-            'email_scheduled' => !empty($email) && !empty($generation_id),
+            'document_id' => $document_id,
+            'web_url' => $web_url,
+            'gamma_url' => $gamma_url,
+            'email_scheduled' => $email_scheduled,
             'response' => $result
         ));
     }
